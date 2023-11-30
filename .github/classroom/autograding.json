@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "Code Builds",
+      "setup": "",
+      "run": "g++ -std=c++17 *.cpp -o test1",
+      "input": "",
+      "output": "",
+      "comparison": "exact",
+      "timeout": 10,
+      "points": 2
+    }
+  ]
+}
