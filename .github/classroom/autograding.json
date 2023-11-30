@@ -2,8 +2,8 @@
   "tests": [
     {
       "name": "Code Builds",
-      "setup": "cd tasks/01-querydb",
-      "run": "g++ -std=c++17 *.cpp -o test1",
+      "setup": "",
+      "run": "g++ -std=c++17 ./tasks/01-querydb/*.cpp -o test1",
       "input": "",
       "output": "",
       "comparison": "exact",
