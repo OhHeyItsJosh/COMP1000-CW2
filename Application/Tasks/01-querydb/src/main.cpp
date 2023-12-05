@@ -6,11 +6,7 @@
 #include <map>
 #include <string>
 
-#include "core.h"
-
-//See bottom of main
-int findArg(int argc, char *argv[], std::string pattern);
-
+#include "main.h"
 
 /*
  *
@@ -63,6 +59,9 @@ int findArg(int argc, char *argv[], std::string pattern);
 #define ARG_DB "-db"
 #define ARG_SHOWALL "-showAll"
 #define ARG_SID "-sid"
+#define ARG_SHOWNAME "-n"
+#define ARG_SHOWGRADES "-g"
+#define ARG_SHOWPHONE "-p"
 
 int main(int argc, const char *argv[])
 {
@@ -84,11 +83,15 @@ int main(int argc, const char *argv[])
     using namespace CMDUtils;
 
     // parse the args, takes a list of parsers where CMDTagParser({tagName}, required
+    // uses custom tag parsing system I built for this project.
     CMDParseResult parsedArgs = CMDUtils::parseArgs(argc, argv, {
         CMDTagParser::tagWithArgument(ARG_DB),
         CMDTagParser(ARG_SHOWALL),
-        CMDTagParser::tagWithArgument(ARG_SID)
-        });
+        CMDTagParser::tagWithArgument(ARG_SID),
+        CMDTagParser(ARG_SHOWNAME),
+        CMDTagParser(ARG_SHOWGRADES),
+        CMDTagParser(ARG_SHOWPHONE),
+    });
 
     //Scan command line for -db switch
     CMDTagParserResult* db_in = parsedArgs.getResult(ARG_DB);
@@ -98,21 +101,21 @@ int main(int argc, const char *argv[])
         return EXIT_FAILURE;
     }
 
+    // import the database
+    std::string dbName = db_in->value;
+    bool importSuccessful = database.importFromFile(dbName);
+    if (!importSuccessful)
+    {
+        std::cout << "Provided database could not be loaded, please make sure the file you provided exists and is a valid database file" << std::endl;
+        return EXIT_FAILURE;
+    }
 
     //*******************************
     //Option to display data ALL DATA
     //*******************************
 
-    std::string dbName = db_in->value;
-    bool importSuccessful = database.importFromFile(dbName);
-    if (!importSuccessful)
-    {
-        std::cout << "Databse could not be imported";
-        return EXIT_FAILURE;
-    }
-
-    CMDTagParserResult* showAll_in = parsedArgs.getResult(ARG_SHOWALL);
-    if (showAll_in != nullptr) 
+    bool showALl = parsedArgs.hasResult(ARG_SHOWALL);
+    if (showALl) 
     {
         std::stringstream outputBuilder;
 
@@ -127,10 +130,6 @@ int main(int argc, const char *argv[])
 
         std::cout << outputBuilder.str() << std::endl;
         return EXIT_SUCCESS;
-    /*    for (Record& r : db) {
-            printRecord(r);
-            cout << endl;
-        }*/
     }
 
     //**************************************************************
@@ -142,55 +141,62 @@ int main(int argc, const char *argv[])
         std::cout << "Please provide a student ID after -sid" << std::endl;
         return EXIT_FAILURE;
     }
+    
+    // attempt to parse the student id
+    uint32_t studentId;
 
     try {
-        uint32_t studentId = stoi(sid_in->value);
-        Record* record = database.getRecord(studentId);
+        studentId = stoi(sid_in->value);
 
-        std::cout << record->getFullDisplayString() << std::endl;
     }
     catch (std::exception e) {
         std::cout << "Student ID could not be parsed, make sure it is an integer" << std::endl;
         return EXIT_FAILURE;
     }
-    //if (p) {
 
-    //    //Did they provide a SID?
-    //    string strID = argv[p+1];
+    Record* record = database.getRecord(studentId);
+    
+    // check that the student exists
+    if (record == nullptr)
+    {
+        std::cout << "The provided student ID is not in the database" << std::endl;
+        return EXIT_FAILURE;
+    }
 
-    //    //Try to convert to a number
-    //    int sid;
-    //    try {
-    //        //Extract student ID as integer - can throw an exception if not an integer
-    //        sid = stoi(strID);
+    // ********************************************
+    // ** handle specifiers if they are provided **
+    // ********************************************
+    bool nameSpecifier = parsedArgs.hasResult(ARG_SHOWNAME);
+    bool gradesSpecifier = parsedArgs.hasResult(ARG_SHOWGRADES);
+    bool phoneSpecifier = parsedArgs.hasResult(ARG_SHOWPHONE);
 
-    //        //Search for record with this ID
-    //        bool found = false;
-    //        for (Record& r : db) {
-    //            if (r.SID == sid) {
-    //                //Display
-    //                printRecord(r);
-    //                //Flag that a match was found
-    //                found = true;
-    //                break;
-    //            }
-    //        }
-
-    //        //In the event a match was not found, tell the user
-    //        if (!found) {
-    //            cout << "No record with SID=" << strID << " was found" << endl;
-    //        }
-
-    //    } catch (exception e) {
-    //        cout << "Please provide a student ID as an integer" << endl;
-    //        return EXIT_FAILURE;
-    //    } //End try
-
-    //} //End if
-
-    //**************************************************************
-    //You could continue here :)
-    //**************************************************************
+    // if a specifier is provided
+    if (nameSpecifier || gradesSpecifier || phoneSpecifier)
+    {
+        std::vector<RecordField> displayFields = getFieldsFromFlags(nameSpecifier, gradesSpecifier, phoneSpecifier);
+        std::cout << record->getDisplayStringForFields(displayFields) << std::endl;
+    }
+    // display all fields if no specifier is provided
+    else
+        std::cout << record->getFullDisplayString() << std::endl;
 
     return EXIT_SUCCESS;
+}
+
+std::vector<RecordField> getFieldsFromFlags(bool showName, bool showGrades, bool showPhone)
+{
+    std::vector<RecordField> fields;
+    
+    if (showName)
+        fields.push_back(RecordField::NAME);
+
+    if (showGrades) {
+        fields.push_back(RecordField::GRADES);
+        fields.push_back(RecordField::ENROLLMENTS);
+    }
+
+    if (showPhone)
+        fields.push_back(RecordField::PHONE);
+
+    return fields;
 }
