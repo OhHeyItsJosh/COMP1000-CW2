@@ -26,7 +26,6 @@ enum DBReadState
 
 bool Database::importFromFile(std::string fileName)
 {
-
     //Open database file
     std::ifstream readStream(fileName);
     if (!readStream.is_open()) {

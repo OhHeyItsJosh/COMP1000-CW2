@@ -2,6 +2,8 @@
 #include <sstream>
 #include <functional>
 
+#include "../stringUtil.h"
+
 std::map<RecordField, std::string> Record::s_fieldNames = 
 {
 	{ RecordField::SID, "Student Id" },
@@ -17,28 +19,6 @@ void Record::addEnrollmentAndGrade(std::string enrollment, float grade)
 	this->grades.push_back(grade);
 }
 
-template<typename T>
-std::string stringifyList(std::vector<T> list, std::function<void(const T&, bool, std::stringstream&)> forEach)
-{
-	std::stringstream builder;
-
-	for (uint32_t i = 0; i < list.size(); i++)
-	{
-		const T& item = list[i];
-		forEach(item, i + 1 == list.size(), builder);
-	}
-
-	return builder.str();
-}
-
-template<typename T>
-std::string stringifyList(std::vector<T> list)
-{
-	return stringifyList<T>(list, [](const T& item, bool last, std::stringstream& builder) {
-		builder << item << (last ? "" : " ");
-	});
-}
-
 std::string Record::fieldToString(RecordField field)
 {
 	switch (field)
@@ -48,9 +28,9 @@ std::string Record::fieldToString(RecordField field)
 	case NAME: 
 		return this->name;
 	case ENROLLMENTS: 
-		return stringifyList<std::string>(this->enrollments);
+		return defaultStringifyList<std::string>(this->enrollments);
 	case GRADES:
-		return stringifyList<float>(this->grades);
+		return defaultStringifyList<float>(this->grades);
 	case PHONE:
 		return this->phone;
 	default:

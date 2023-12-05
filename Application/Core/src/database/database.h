@@ -1,5 +1,4 @@
 #pragma once
-#include "record.h"
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -7,6 +6,8 @@
 #include <exception>
 #include <regex>
 #include "functional"
+
+#include "record.h"
 
 class Database
 {

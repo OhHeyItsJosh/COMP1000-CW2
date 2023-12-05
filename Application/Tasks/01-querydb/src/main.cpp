@@ -90,8 +90,17 @@ int main(int argc, const char *argv[])
         CMDTagParser::tagWithArgument(ARG_SID),
         CMDTagParser(ARG_SHOWNAME),
         CMDTagParser(ARG_SHOWGRADES),
-        CMDTagParser(ARG_SHOWPHONE),
+        CMDTagParser(ARG_SHOWPHONE)
     });
+
+    if (parsedArgs.hasUnrequestedArgs())
+    {
+        // print out the provided args that are not recognised
+        std::cout << "The following arguments could not be recognised or are duplicates of existing arguments:\n -> "
+            << stringifyList<std::string>(parsedArgs.getUnrequestedArgs(), [](const std::string& item, bool last, std::stringstream& builder) {
+            builder << "\"" << item << "\"" << (last ? "" : ", ");
+         }) << std::endl;
+    }
 
     //Scan command line for -db switch
     CMDTagParserResult* db_in = parsedArgs.getResult(ARG_DB);
@@ -102,7 +111,7 @@ int main(int argc, const char *argv[])
     }
 
     // import the database
-    std::string dbName = db_in->value;
+    std::string dbName = db_in->getSingletonInput();
     bool importSuccessful = database.importFromFile(dbName);
     if (!importSuccessful)
     {
@@ -114,8 +123,8 @@ int main(int argc, const char *argv[])
     //Option to display data ALL DATA
     //*******************************
 
-    bool showALl = parsedArgs.hasResult(ARG_SHOWALL);
-    if (showALl) 
+    bool showAll = parsedArgs.hasResult(ARG_SHOWALL);
+    if (showAll) 
     {
         std::stringstream outputBuilder;
 
@@ -146,7 +155,7 @@ int main(int argc, const char *argv[])
     uint32_t studentId;
 
     try {
-        studentId = stoi(sid_in->value);
+        studentId = stoi(sid_in->getSingletonInput());
 
     }
     catch (std::exception e) {

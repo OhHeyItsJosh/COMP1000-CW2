@@ -2,8 +2,8 @@
 
 namespace CMDUtils
 {
-	CMDParseResult::CMDParseResult(std::map<std::string, CMDTagParserResult> results)
-		: m_results(results)
+	CMDParseResult::CMDParseResult(std::map<std::string, CMDTagParserResult> results, std::vector<std::string> unrequestedInputs)
+		: m_results(results), m_unrequestedInputs(unrequestedInputs)
 	{}
 
 	CMDTagParserResult* CMDParseResult::getResult(const std::string& tag)
@@ -18,5 +18,15 @@ namespace CMDUtils
 	bool CMDParseResult::hasResult(const std::string& tag)
 	{
 		return m_results.find(tag) != m_results.end();
+	}
+
+	bool CMDParseResult::hasUnrequestedArgs()
+	{
+		return m_unrequestedInputs.size() > 0;
+	}
+
+	std::vector<std::string>& CMDParseResult::getUnrequestedArgs()
+	{
+		return m_unrequestedInputs;
 	}
 }

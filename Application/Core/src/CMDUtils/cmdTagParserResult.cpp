@@ -2,8 +2,8 @@
 
 namespace CMDUtils
 {
-	CMDTagParserResult::CMDTagParserResult(std::string value, bool required, bool hasValue)
-		: value(value), requiresValue(required), hasValue(hasValue)
+	CMDTagParserResult::CMDTagParserResult(std::vector<std::string> inputs, bool required)
+		: inputs(inputs), requiresValue(required), hasValue(inputs.size() > 0)
 	{}
 
 	bool CMDTagParserResult::isValid()
@@ -12,5 +12,10 @@ namespace CMDUtils
 			return this->hasValue;
 
 		return true;
+	}
+
+	const std::string& CMDTagParserResult::getSingletonInput()
+	{
+		return inputs[0];
 	}
 }

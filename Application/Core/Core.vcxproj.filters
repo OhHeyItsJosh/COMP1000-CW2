@@ -47,7 +47,7 @@
     <ClInclude Include="src\database\testDB.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\core.h">
+    <ClInclude Include="src\coreModels.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\cmdUtils.h">
@@ -66,6 +66,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="database\testDB.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stringUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\coreUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

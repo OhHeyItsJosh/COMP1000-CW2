@@ -1,19 +1,21 @@
 #pragma once
 #include <string>
+#include <vector>
 
 namespace CMDUtils
 {
 	class CMDTagParserResult
 	{
 	public:
-		const std::string value;
+		const std::vector<std::string> inputs;
 		const bool requiresValue;
 		const bool hasValue;
 
 	public:
-		CMDTagParserResult(std::string value, bool required, bool hasValue);
+		CMDTagParserResult(std::vector<std::string> inputs, bool required);
 
 	public:
 		bool isValid();
+		const std::string& getSingletonInput();
 	};
 }
