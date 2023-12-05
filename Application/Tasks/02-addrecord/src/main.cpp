@@ -5,9 +5,6 @@
 #include <regex>
 #include <map>
 #include <string>
-#include "testdb.h"
-#include "studentrecord.h"
-using namespace std;
 
 
 /*
@@ -118,18 +115,18 @@ int main(int argc, char *argv[])
     // These are passed to the application as command line arguments
     // Return value should be EXIT_FAILURE if the application exited with an error, or EXIT_SUCCESS otherwise
 
-    if (argc == 1) {
-        //Welcome message
-        cout << "addrecord (c)2023" << endl;
+    //if (argc == 1) {
+    //    //Welcome message
+    //    cout << "addrecord (c)2023" << endl;
 
-        //Create some test data
-        createTestDB("computing.txt");
+    //    //Create some test data
+    //    createTestDB("computing.txt");
 
-        //Done
-        return EXIT_SUCCESS;
-    }
+    //    //Done
+    //    return EXIT_SUCCESS;
+    //}
 
-    Record s;
+    //Record s;
 
     //return EXIT_FAILURE;
     return EXIT_SUCCESS;

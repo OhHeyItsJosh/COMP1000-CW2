@@ -1,5 +1,7 @@
-#include "database.h"
 #include <functional>
+
+#include "database.h"
+#include "testDB.h"
 
 using InputParser = std::function<void(Record&, std::string&)>;
 
@@ -34,7 +36,7 @@ bool Database::importFromFile(std::string fileName)
     // the sate for the state machine
     DBReadState state = DBReadState::START;
 
-    //Locals used for navigating the database file
+    //Locals used for navigating the database 
     Record nextRecord;
     
     // parsers for parsing each tag
@@ -88,7 +90,9 @@ bool Database::importFromFile(std::string fileName)
                 if (nextStr == "#RECORD")
                 {
                     // begin new record
-                    m_records.push_back(nextRecord);
+                    if (nextRecord.sid > 0)
+                        m_records.emplace(nextRecord.sid, nextRecord);
+
                     nextRecord = { 0 };
                     break;
                 }
@@ -112,19 +116,58 @@ bool Database::importFromFile(std::string fileName)
 
         //The loop above may exit before pushing the last record into db
         if (nextRecord.sid > 0) {
-            m_records.push_back(nextRecord);
+            m_records.emplace(nextRecord.sid, nextRecord);
         }
 
         //Close the file - we are done reading it. Everything is now in the db vector
         readStream.close();
-
+        return true;
     }
     catch (std::exception e) {
         //Many things could go wrong, so we catch them here, tell the user and close the file (tidy up)
         readStream.close();
         std::cout << "Error reading data" << std::endl;
         std::cerr << e.what() << std::endl;
-        return EXIT_FAILURE;
+        return false;
     } //end try
 
 }
+
+void Database::createTestDB(std::string name)
+{
+    //Does the file exist?
+    std::ifstream ip(name);
+    if (ip.is_open()) {
+        std::cout << name << " exists" << std::endl;
+        ip.close();
+        return;
+    }
+
+    //Create some test data
+    std::cout << "Creating starter database for testing" << std::endl;
+    std::ofstream op(name);
+    op << TESTSTR;
+    op.close();
+
+}
+
+Record* Database::getRecord(uint32_t sid)
+{
+    bool hasRecord = m_records.find(sid) != m_records.end();
+    if (!hasRecord)
+        return nullptr;
+
+    return &m_records.at(sid);
+}
+
+void Database::forEachRecord(std::function<void(Record&, bool)> callback)
+{
+    uint32_t count = 0;
+    for (auto& iter : m_records)
+    {
+        callback(iter.second, count+1 == m_records.size());
+        count++;
+    }
+}
+
+

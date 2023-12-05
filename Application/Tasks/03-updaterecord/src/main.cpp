@@ -5,8 +5,6 @@
 #include <regex>
 #include <map>
 #include <string>
-#include "testdb.h"
-#include "studentrecord.h"
 using namespace std;
 
 /*
@@ -102,18 +100,18 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-    if (argc == 1) {
-        //Welcome message
-        cout << "updaterecord (c)2023" << endl;
+    //if (argc == 1) {
+    //    //Welcome message
+    //    cout << "updaterecord (c)2023" << endl;
 
-        //Create some test data
-        createTestDB("computing.txt");
+    //    //Create some test data
+    //    createTestDB("computing.txt");
 
-        //Done
-        return EXIT_SUCCESS;
-    }
+    //    //Done
+    //    return EXIT_SUCCESS;
+    //}
 
-    Record s;
+    //Record s;
 
 
     return EXIT_SUCCESS;
