@@ -75,8 +75,6 @@ int main(int argc, const char *argv[])
 
         //Create some test data
         database.createTestDB("computing.txt");
-
-        //Done
         return EXIT_SUCCESS;
     }
 
@@ -106,7 +104,7 @@ int main(int argc, const char *argv[])
     CMDTagParserResult* db_in = parsedArgs.getResult(ARG_DB);
     if (db_in == nullptr || !db_in->isValid())
     {
-        std::cout << "Please provide a database with -db <filename>" << std::endl;
+        std::cout << "Please provide a database with '-db <filename>'" << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -145,9 +143,15 @@ int main(int argc, const char *argv[])
     //Option to display data from one record with a given student ID
     //**************************************************************
     CMDTagParserResult* sid_in = parsedArgs.getResult(ARG_SID);
-    if (sid_in == nullptr || !sid_in->isValid())
+    if (sid_in == nullptr)
     {
-        std::cout << "Please provide a student ID after -sid" << std::endl;
+        std::cout << "Please provide either a '-showAll' or '-sid <id>' flag" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    if (!sid_in->isValid())
+    {
+        std::cout << "Please provide a student ID with '-sid <id>'" << std::endl;
         return EXIT_FAILURE;
     }
     
@@ -168,7 +172,7 @@ int main(int argc, const char *argv[])
     // check that the student exists
     if (record == nullptr)
     {
-        std::cout << "The provided student ID is not in the database" << std::endl;
+        std::cout << "Provided student Id could not be found in the database" << std::endl;
         return EXIT_FAILURE;
     }
 

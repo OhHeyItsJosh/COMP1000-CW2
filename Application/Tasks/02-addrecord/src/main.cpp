@@ -6,6 +6,8 @@
 #include <map>
 #include <string>
 
+#include "coreModels.h"
+#include "coreUtils.h"
 
 /*
  * Adds a NEW user to the end of an existing database file or the start of a new file
@@ -108,25 +110,71 @@
 
 // Main program here - you may shared / reuse as much code as you like with other projects included in this starter code
 
+#define ARG_DB "-db"
+#define ARG_SID "-sid"
+
+#define ARG_NAME "-name"
+#define ARG_PHONE "-phone"
+#define ARG_GRADES "-grades"
+#define ARG_MODULES "-modulecodes"
+
 int main(int argc, char *argv[])
 {
-    // argv is an array of strings, where argv[0] is the path to the program, argv[1] is the first parameter, ...
-    // argc is the number of strings in the array argv
-    // These are passed to the application as command line arguments
-    // Return value should be EXIT_FAILURE if the application exited with an error, or EXIT_SUCCESS otherwise
+    Database database;
 
-    //if (argc == 1) {
-    //    //Welcome message
-    //    cout << "addrecord (c)2023" << endl;
+    if (argc == 1) {
+        //Welcome message
+        std::cout << "addrecord (c)2023" << std::endl;
 
-    //    //Create some test data
-    //    createTestDB("computing.txt");
+        //Create some test data
+        database.createTestDB("computing.txt");
+        return EXIT_SUCCESS;
+    }
 
-    //    //Done
-    //    return EXIT_SUCCESS;
-    //}
+    using namespace CMDUtils;
 
-    //Record s;
+    CMDParseResult parserResult = CMDUtils::parseArgs(argc, argv, {
+        CMDTagParser(ARG_DB),
+        CMDTagParser::tagWithArgument(ARG_SID),
+        CMDTagParser::tagWithArgument(ARG_NAME),
+        CMDTagParser::tagWithArgument(ARG_PHONE),
+        CMDTagParser::tagWithArgument(ARG_GRADES),
+        CMDTagParser::tagWithArgument(ARG_MODULES)
+    });
+
+    CMDTagParserResult* argDb_in = parserResult.getResult(ARG_DB);
+    if (argDb_in != nullptr || !argDb_in->isValid())
+    {
+        std::cout << "Please provide a database with '-db <filename>'" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    std::string databaseName = argDb_in->getSingletonInput();
+    bool importSuccess = database.importFromFile(databaseName);
+    if (!importSuccess)
+    {
+        std::cout << "Provided database could not be loaded, please make sure the file you provided exists and is a valid database file" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    CMDTagParserResult* argSid_in = parserResult.getResult(ARG_SID);
+    if (argSid_in == nullptr || argSid_in->isValid())
+    {
+        std::cout << "Please provide a student id with '-sid <id>'" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    // parse the student id
+    uint32_t studentId;
+    try {
+        studentId = stoi(argSid_in->getSingletonInput());
+    }
+    catch (std::exception e) {
+        std::cout << "Student ID could not be parsed, make sure it is an integer" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+
 
     //return EXIT_FAILURE;
     return EXIT_SUCCESS;
