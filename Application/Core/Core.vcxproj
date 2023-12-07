@@ -151,13 +151,13 @@
     <ClInclude Include="src\cmdUtils.h" />
     <ClInclude Include="src\CMDUtils\cmdParseResult.h" />
     <ClInclude Include="src\CMDUtils\cmdTagParser.h" />
-	<ClInclude Include="src\CMDUtils\cmdTagParserResult.h" />
+    <ClInclude Include="src\CMDUtils\cmdTagParserResult.h" />
     <ClInclude Include="src\coreModels.h" />
     <ClInclude Include="src\coreUtils.h" />
     <ClInclude Include="src\database\database.h" />
     <ClInclude Include="src\database\record.h" />
     <ClInclude Include="src\database\testDB.h" />
-    <ClInclude Include="src\stringUtil.h" />
+    <ClInclude Include="src\basicUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

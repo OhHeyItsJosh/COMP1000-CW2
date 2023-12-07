@@ -159,6 +159,11 @@ Record* Database::getRecord(uint32_t sid)
     return &m_records.at(sid);
 }
 
+void Database::addRecord(Record& record)
+{
+    m_records.emplace(record.sid, std::move(record));
+}
+
 void Database::forEachRecord(std::function<void(Record&, bool)> callback)
 {
     uint32_t count = 0;

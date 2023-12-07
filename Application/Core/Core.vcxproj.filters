@@ -24,9 +24,6 @@
     <ClCompile Include="src\cmdUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\CMDUtils\cmdTagParserResult.h">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\CMDUtils\cmdParseResult.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -68,10 +65,13 @@
     <ClInclude Include="database\testDB.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\stringUtil.h">
+    <ClInclude Include="src\basicUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\coreUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CMDUtils\cmdTagParserResult.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

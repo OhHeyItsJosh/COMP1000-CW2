@@ -2,20 +2,24 @@
 #include <string>
 #include <vector>
 
+#include "cmdTagParser.h"
+
 namespace CMDUtils
 {
 	class CMDTagParserResult
 	{
-	public:
-		const std::vector<std::string> inputs;
-		const bool requiresValue;
-		const bool hasValue;
+	private:
+		CMDTagParser m_parser;
 
 	public:
-		CMDTagParserResult(std::vector<std::string> inputs, bool required);
+		const std::vector<std::string> inputs;
+
+	public:
+		CMDTagParserResult(std::vector<std::string> inputs, CMDTagParser&& parser);
 
 	public:
 		bool isValid();
+		void logArgCount(std::ostream& outStream);
 		const std::string& getSingletonInput();
 	};
 }

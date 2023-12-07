@@ -2,7 +2,7 @@
 #include <sstream>
 #include <functional>
 
-#include "../stringUtil.h"
+#include "../basicUtils.h"
 
 std::map<RecordField, std::string> Record::s_fieldNames = 
 {

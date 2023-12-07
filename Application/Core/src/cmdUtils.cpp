@@ -30,6 +30,7 @@ namespace CMDUtils {
 			if (!isTag(currentArg.c_str()))
 				continue;
 
+			// test whether tag is valid
 			auto foundParser = parserTagMap.find(currentArg);
 			if (foundParser == parserTagMap.end())
 			{
@@ -53,7 +54,7 @@ namespace CMDUtils {
 			}
 
 			// add result and use current parser
-			results.emplace(currentArg, CMDTagParserResult( inputs, requiresData ));
+			results.emplace(currentArg, CMDTagParserResult( inputs, std::move(parser) ));
 			parserTagMap.erase(currentArg);
 			inputs.clear();
 		}
