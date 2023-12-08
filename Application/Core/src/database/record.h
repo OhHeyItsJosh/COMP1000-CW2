@@ -3,6 +3,8 @@
 #include <string>
 #include <map>
 #include <set>
+#include <functional>
+#include <iostream>
 
 #define TAG_SID "#SID"
 #define TAG_NAME "#NAME"
@@ -37,6 +39,8 @@ public:
 	void addEnrollmentAndGrade(std::string enrollment, float grade);
 	std::string getFullDisplayString();
 	std::string getDisplayStringForFields(std::vector<RecordField> fields);
+	void writeTag(std::ostream& stream, const char* tag, const std::string& content);
+	void writeData(std::ostream& stream);
 
 	static std::string& getRecordName(RecordField field);
 };

@@ -19,8 +19,10 @@ public:
 
 public:
 	bool importFromFile(std::string fileName);
+	bool exportToFile(std::string fileName);
 	void createTestDB(std::string name);
 
+	bool hasRecord(uint32_t sid);
 	Record* getRecord(uint32_t sid);
 	void addRecord(Record& record);
 	void forEachRecord(std::function<void(Record&, bool)> callback);

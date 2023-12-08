@@ -3,4 +3,4 @@
 #include "coreUtils.h"
 #include "coreModels.h"
 
-int parseStudentInput(CMDUtils::CMDParseResult& parsedArgs, Database& database);
+std::optional<Record> parseRecordInput(CMDUtils::CMDParseResult& parsedArgs, Database& database);

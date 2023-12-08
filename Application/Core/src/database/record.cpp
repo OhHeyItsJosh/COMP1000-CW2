@@ -1,6 +1,5 @@
 #include "record.h"
 #include <sstream>
-#include <functional>
 
 #include "../basicUtils.h"
 
@@ -48,6 +47,26 @@ std::string Record::getDisplayStringForFields(std::vector<RecordField> fields)
 	return stringifyList<RecordField>(fields, [&](const RecordField& item, bool last, std::stringstream& builder) {
 		builder << this->getRecordName(item) << ":\n  " + this->fieldToString(item) << "\n";
 	});
+}
+
+void Record::writeTag(std::ostream& stream, const char* tag, const std::string& content)
+{
+	if (content == "")
+		return;
+
+	stream << " " << tag << std::endl
+		<< "    " << content << std::endl;
+}
+
+
+void Record::writeData(std::ostream& stream) 
+{
+	stream << "#RECORD" << std::endl;
+	this->writeTag(stream, TAG_SID, this->fieldToString(RecordField::SID));
+	this->writeTag(stream, TAG_NAME, this->fieldToString(RecordField::NAME));
+	this->writeTag(stream, TAG_ENROLLMENTS, this->fieldToString(RecordField::ENROLLMENTS));
+	this->writeTag(stream, TAG_GRADES, this->fieldToString(RecordField::GRADES));
+	this->writeTag(stream, TAG_PHONE, this->fieldToString(RecordField::PHONE));
 }
 
 std::string& Record::getRecordName(RecordField field)

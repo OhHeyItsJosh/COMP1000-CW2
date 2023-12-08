@@ -132,6 +132,7 @@ int main(int argc, const char *argv[])
         return EXIT_SUCCESS;
     }
 
+    // specify the tags I want to parse
     CMDParseResult parserResult = CMDUtils::parseArgs(argc, argv, {
         CMDTagParser::tagWithArgument(ARG_DB),
         CMDTagParser::tagWithArgument(ARG_SID),
@@ -141,6 +142,7 @@ int main(int argc, const char *argv[])
         CMDTagParser::tagWithMultipleArguments(ARG_MODULES, 1, -1)
     });
 
+    // get the database input
     CMDTagParserResult* argDb_in = parserResult.getResult(ARG_DB);
     if (argDb_in == nullptr || !argDb_in->isValid())
     {
@@ -148,6 +150,7 @@ int main(int argc, const char *argv[])
         return EXIT_FAILURE;
     }
 
+    // import the database
     std::string databaseName = argDb_in->getSingletonInput();
     bool importSuccess = database.importFromFile(databaseName);
     if (!importSuccess)
@@ -156,7 +159,18 @@ int main(int argc, const char *argv[])
         return EXIT_FAILURE;
     }
 
-    return parseStudentInput(parserResult, database);
+    // attempt to parse the record from the inputs
+    std::optional<Record> createdRecord = parseRecordInput(parserResult, database);
+    if (!createdRecord.has_value())
+        return EXIT_FAILURE;
+
+    // add the record to the database and write the database to a file
+    Record& record = *createdRecord;
+    database.addRecord(record);
+    database.exportToFile(databaseName);
+
+    std::cout << "Successfully added new record to '" << databaseName << "'" << std::endl;
+    return EXIT_SUCCESS;
 }
 
 
@@ -165,10 +179,10 @@ int main(int argc, const char *argv[])
 
 
 // macro to handle when a required parameter is not provided
-#define ENSURE_PRESENT(arg, argName, argHint) if (arg == nullptr || !arg->isValid()) { if (arg != nullptr) arg->logArgCount(std::cout); printf("%s parameter is required: '%s'", argName, argHint); return EXIT_FAILURE; }
-#define ENSURE_HASVALUE(optional, name, hint) if (!optional.has_value()) { printf("%s could not be parsed: %s", name, hint); return EXIT_FAILURE; }
+#define ENSURE_PRESENT(arg, argName, argHint) if (arg == nullptr || !arg->isValid()) { if (arg != nullptr) arg->logArgCount(std::cout); printf("%s parameter is required: '%s'", argName, argHint); return std::nullopt; }
+#define ENSURE_HASVALUE(optional, name, hint) if (!optional.has_value()) { printf("%s could not be parsed: %s", name, hint); return std::nullopt; }
 
-int parseStudentInput(CMDUtils::CMDParseResult& parsedArgs, Database& database)
+std::optional<Record> parseRecordInput(CMDUtils::CMDParseResult& parsedArgs, Database& database)
 {
     // ensure required parameters sid and name
     CMDTagParserResult* argSid_in = parsedArgs.getResult(ARG_SID);
@@ -186,6 +200,13 @@ int parseStudentInput(CMDUtils::CMDParseResult& parsedArgs, Database& database)
     });
     ENSURE_HASVALUE(studentId, "Student Id", "Must be a number");
 
+    // check if the sid is already being used
+    if (database.hasRecord(*studentId))
+    {
+        std::cout << "A record with the sid '" << *studentId << "' already exists within this database" << std::endl;
+        return std::nullopt;
+    }
+
     record.sid = *studentId;
     record.name = argName_in->getSingletonInput();
 
@@ -199,10 +220,10 @@ int parseStudentInput(CMDUtils::CMDParseResult& parsedArgs, Database& database)
         if (!argPhone_in->isValid())
         {
             argPhone_in->logArgCount(std::cout);
-            return EXIT_FAILURE;
+            return std::nullopt;
         }
-    }
         record.phone = argPhone_in->getSingletonInput();
+    }
 
     // parse grades / moduleCodes if provided
     if (argGrades_in != nullptr || argEnrollments_in != nullptr)
@@ -211,9 +232,10 @@ int parseStudentInput(CMDUtils::CMDParseResult& parsedArgs, Database& database)
         if ((argGrades_in == nullptr) != (argEnrollments_in == nullptr))
         {
             std::cout << "Module Codes and Grades must be provided together" << std::endl;
-            return EXIT_FAILURE;
+            return std::nullopt;
         }
 
+        // check if grades and enrollments inputs are valid
         bool gradesValid = argGrades_in->isValid();
         bool enrollmentsValid = argEnrollments_in->isValid();
         if (!gradesValid || !enrollmentsValid)
@@ -223,13 +245,14 @@ int parseStudentInput(CMDUtils::CMDParseResult& parsedArgs, Database& database)
             if (!enrollmentsValid)
                 argEnrollments_in->logArgCount(std::cout);
 
-            return EXIT_FAILURE;
+            return std::nullopt;
         }
 
+        // check that grades and enrollments are the same size
         if (argGrades_in->inputs.size() != argEnrollments_in->inputs.size())
         {
             std::cout << "All module codes must have a corresponding grade" << std::endl;
-            return EXIT_FAILURE;
+            return std::nullopt;
         }
 
 
@@ -248,6 +271,5 @@ int parseStudentInput(CMDUtils::CMDParseResult& parsedArgs, Database& database)
         record.grades = *gradesParse;
     }
 
-    database.addRecord(record);
-       
+    return record;
 }

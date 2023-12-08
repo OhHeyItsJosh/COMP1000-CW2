@@ -132,6 +132,25 @@ bool Database::importFromFile(std::string fileName)
 
 }
 
+bool Database::exportToFile(std::string fileName)
+{
+    std::ofstream writeStream(fileName);
+    if (!writeStream.is_open())
+        return false;
+
+    this->forEachRecord([&](Record& record, bool last)
+        {
+            record.writeData(writeStream);
+            if (!last) {
+                writeStream << "\n";
+            }
+        }
+    );
+
+    writeStream.close();
+    return true;
+}
+
 void Database::createTestDB(std::string name)
 {
     //Does the file exist?
@@ -148,6 +167,11 @@ void Database::createTestDB(std::string name)
     op << TESTSTR;
     op.close();
 
+}
+
+bool Database::hasRecord(uint32_t sid)
+{
+    return m_records.find(sid) != m_records.end();
 }
 
 Record* Database::getRecord(uint32_t sid)
