@@ -138,7 +138,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\cmdUtils.cpp" />
-    <ClCompile Include="src\cmd\parseRecordFromArgs.cpp" />
     <ClCompile Include="src\cmd\utils\cmdParseResult.cpp" />
     <ClCompile Include="src\cmd\utils\cmdTagParser.cpp" />
     <ClCompile Include="src\cmd\utils\cmdTagParserResult.cpp" />
@@ -150,7 +149,6 @@
     <ClInclude Include="database\record.h" />
     <ClInclude Include="database\testDB.h" />
     <ClInclude Include="src\cmdUtils.h" />
-    <ClInclude Include="src\cmd\parseRecordFromArgs.h" />
     <ClInclude Include="src\cmd\utils\cmdParseResult.h" />
     <ClInclude Include="src\cmd\utils\cmdTagParser.h" />
     <ClInclude Include="src\cmd\utils\cmdTagParserResult.h" />
