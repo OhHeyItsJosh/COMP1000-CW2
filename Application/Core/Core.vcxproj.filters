@@ -24,13 +24,16 @@
     <ClCompile Include="src\cmdUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\CMDUtils\cmdParseResult.cpp">
+    <ClCompile Include="src\cmd\utils\cmdParseResult.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\CMDUtils\cmdTagParser.cpp">
+    <ClCompile Include="src\cmd\utils\cmdTagParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\CMDUtils\cmdTagParserResult.cpp">
+    <ClCompile Include="src\cmd\utils\cmdTagParserResult.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cmd\parseRecordFromArgs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -50,10 +53,10 @@
     <ClInclude Include="src\cmdUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\CMDUtils\cmdTagParser.h">
+    <ClInclude Include="src\cmd\utils\cmdTagParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\CMDUtils\cmdParseResult.h">
+    <ClInclude Include="src\cmd\utils\cmdParseResult.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="database\database.h">
@@ -71,7 +74,10 @@
     <ClInclude Include="src\coreUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\CMDUtils\cmdTagParserResult.h">
+    <ClInclude Include="src\cmd\utils\cmdTagParserResult.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cmd\parseRecordFromArgs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

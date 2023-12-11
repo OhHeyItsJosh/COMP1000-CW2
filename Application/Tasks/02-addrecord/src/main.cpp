@@ -136,7 +136,7 @@ int main(int argc, const char *argv[])
     CMDParseResult parserResult = CMDUtils::parseArgs(argc, argv, {
         CMDTagParser::tagWithArgument(ARG_DB),
         CMDTagParser::tagWithArgument(ARG_SID),
-        CMDTagParser::tagWithArgument(ARG_NAME),
+        CMDTagParser::tagWithMultipleArguments(ARG_NAME, 2, -1),
         CMDTagParser::tagWithArgument(ARG_PHONE),
         CMDTagParser::tagWithMultipleArguments(ARG_GRADES, 1, -1),
         CMDTagParser::tagWithMultipleArguments(ARG_MODULES, 1, -1)
@@ -146,6 +146,7 @@ int main(int argc, const char *argv[])
     CMDTagParserResult* argDb_in = parserResult.getResult(ARG_DB);
     if (argDb_in == nullptr || !argDb_in->isValid())
     {
+        argDb_in->logArgCount(std::cout);
         std::cout << "Please provide a database with '-db <filename>'" << std::endl;
         return EXIT_FAILURE;
     }
@@ -179,7 +180,7 @@ int main(int argc, const char *argv[])
 
 
 // macro to handle when a required parameter is not provided
-#define ENSURE_PRESENT(arg, argName, argHint) if (arg == nullptr || !arg->isValid()) { if (arg != nullptr) arg->logArgCount(std::cout); printf("%s parameter is required: '%s'", argName, argHint); return std::nullopt; }
+#define ENSURE_ARG_VALID(arg, argName, argHint) if (arg == nullptr || !arg->isValid()) { if (arg != nullptr) arg->logArgCount(std::cout); printf("%s parameter is required: '%s'", argName, argHint); return std::nullopt; }
 #define ENSURE_HASVALUE(optional, name, hint) if (!optional.has_value()) { printf("%s could not be parsed: %s", name, hint); return std::nullopt; }
 
 std::optional<Record> parseRecordInput(CMDUtils::CMDParseResult& parsedArgs, Database& database)
@@ -188,8 +189,8 @@ std::optional<Record> parseRecordInput(CMDUtils::CMDParseResult& parsedArgs, Dat
     CMDTagParserResult* argSid_in = parsedArgs.getResult(ARG_SID);
     CMDTagParserResult* argName_in = parsedArgs.getResult(ARG_NAME);
 
-    ENSURE_PRESENT(argSid_in, "Student Id", "-sid <student id>");
-    ENSURE_PRESENT(argName_in, "Name", "-name <student name>");
+    ENSURE_ARG_VALID(argSid_in, "Student Id", "-sid <student id>");
+    ENSURE_ARG_VALID(argName_in, "Name", "-name <student name>");
     
     // create the record
     Record record;
@@ -208,7 +209,7 @@ std::optional<Record> parseRecordInput(CMDUtils::CMDParseResult& parsedArgs, Dat
     }
 
     record.sid = *studentId;
-    record.name = argName_in->getSingletonInput();
+    record.name = defaultStringifyList<std::string>(argName_in->inputs);
 
     CMDTagParserResult* argPhone_in = parsedArgs.getResult(ARG_PHONE);
     CMDTagParserResult* argGrades_in = parsedArgs.getResult(ARG_GRADES);

@@ -104,6 +104,7 @@ int main(int argc, const char *argv[])
     CMDTagParserResult* db_in = parsedArgs.getResult(ARG_DB);
     if (db_in == nullptr || !db_in->isValid())
     {
+        db_in->logArgCount(std::cout);
         std::cout << "Please provide a database with '-db <filename>'" << std::endl;
         return EXIT_FAILURE;
     }

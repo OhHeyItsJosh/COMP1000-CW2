@@ -3,9 +3,9 @@
 #include <string>
 #include <map>
 
-#include "CMDUtils/cmdTagParser.h"
-#include "CMDUtils/cmdTagParserResult.h"
-#include "CMDUtils/cmdParseResult.h"
+#include "cmd/utils/cmdTagParser.h"
+#include "cmd/utils/cmdTagParserResult.h"
+#include "cmd/utils/cmdParseResult.h"
 
 namespace CMDUtils
 {
