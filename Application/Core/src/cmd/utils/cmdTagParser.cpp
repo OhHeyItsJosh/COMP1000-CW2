@@ -7,7 +7,7 @@ namespace CMDUtils
 	{}
 
 	CMDTagParser::CMDTagParser(const std::string& tag)
-		: m_tag(tag), m_takeData(false), m_maxArgCount(0)
+		: m_tag(tag), m_takeData(false), m_minArgCount(0), m_maxArgCount(0)
 	{}
 
 	CMDTagParser CMDTagParser::tagWithArgument(const std::string& tag)

@@ -1,4 +1,7 @@
 #include "cmdParseResult.h"
+#include "../../basicUtils.h"
+#include <iostream>
+#include <sstream>
 
 namespace CMDUtils
 {
@@ -28,5 +31,14 @@ namespace CMDUtils
 	std::vector<std::string>& CMDParseResult::getUnrequestedArgs()
 	{
 		return m_unrequestedInputs;
+	}
+
+	void CMDParseResult::logUnrequestedArgs(std::ostream& stream)
+	{
+		// print out the provided args that are not recognised
+		stream << "The following arguments could not be recognised or are duplicates of existing arguments:\n -> "
+			<< stringifyList<std::string>(this->getUnrequestedArgs(), [](const std::string& item, bool last, std::stringstream& builder) {
+				builder << "\"" << item << "\"" << (last ? "" : ", ");
+			}) << std::endl;
 	}
 }

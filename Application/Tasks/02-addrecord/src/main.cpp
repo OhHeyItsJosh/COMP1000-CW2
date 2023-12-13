@@ -142,11 +142,14 @@ int main(int argc, const char *argv[])
         CMDTagParser::tagWithMultipleArguments(ARG_MODULES, 1, -1)
     });
 
+    if (parserResult.hasUnrequestedArgs())
+        parserResult.logUnrequestedArgs(std::cout);
+
     // get the database input
     CMDTagParserResult* argDb_in = parserResult.getResult(ARG_DB);
     if (argDb_in == nullptr || !argDb_in->isValid())
     {
-        argDb_in->logArgCount(std::cout);
+        if (argDb_in) argDb_in->logArgCount(std::cout);
         std::cout << "Please provide a database with '-db <filename>'" << std::endl;
         return EXIT_FAILURE;
     }
@@ -180,7 +183,7 @@ int main(int argc, const char *argv[])
 
 
 // macro to handle when a required parameter is not provided
-#define ENSURE_ARG_VALID(arg, argName, argHint) if (arg == nullptr || !arg->isValid()) { if (arg != nullptr) arg->logArgCount(std::cout); printf("%s parameter is required: '%s'", argName, argHint); return std::nullopt; }
+//#define ENSURE_ARG_VALID(arg, argName, argHint) if (arg == nullptr || !arg->isValid()) { if (arg != nullptr) arg->logArgCount(std::cout); printf("%s parameter is required: '%s'", argName, argHint); return std::nullopt; }
 #define ENSURE_HASVALUE(optional, name, hint) if (!optional.has_value()) { printf("%s could not be parsed: %s", name, hint); return std::nullopt; }
 
 std::optional<Record> parseRecordInput(CMDUtils::CMDParseResult& parsedArgs, Database& database)
@@ -189,8 +192,8 @@ std::optional<Record> parseRecordInput(CMDUtils::CMDParseResult& parsedArgs, Dat
     CMDTagParserResult* argSid_in = parsedArgs.getResult(ARG_SID);
     CMDTagParserResult* argName_in = parsedArgs.getResult(ARG_NAME);
 
-    ENSURE_ARG_VALID(argSid_in, "Student Id", "-sid <student id>");
-    ENSURE_ARG_VALID(argName_in, "Name", "-name <student name>");
+    ENSURE_REQUIRED_ARG_VALID(argSid_in, "Student Id", "-sid <student id>", std::nullopt);
+    ENSURE_REQUIRED_ARG_VALID(argName_in, "Name", "-name <student name>", std::nullopt);
     
     // create the record
     Record record;
@@ -229,47 +232,43 @@ std::optional<Record> parseRecordInput(CMDUtils::CMDParseResult& parsedArgs, Dat
     // parse grades / moduleCodes if provided
     if (argGrades_in != nullptr || argEnrollments_in != nullptr)
     {
-        // if one is provided but the other one isn't
-        if ((argGrades_in == nullptr) != (argEnrollments_in == nullptr))
+        // check that a module code is provided, (if it is not, that means only a grade was provided)
+        ENSURE_REQUIRED_ARG_VALID(argEnrollments_in, "-modulecodes", "grades cannot be provided without an accompanied module code '-modulecodes <module codes...>'", std::nullopt);
+
+
+        std::vector<float> grades;
+
+        // get grades if they are provided. If not, initialise them to -1 (no grade)
+        if (argGrades_in != nullptr)
         {
-            std::cout << "Module Codes and Grades must be provided together" << std::endl;
-            return std::nullopt;
-        }
+            ENSURE_ARG_VALID(argGrades_in, std::nullopt);
 
-        // check if grades and enrollments inputs are valid
-        bool gradesValid = argGrades_in->isValid();
-        bool enrollmentsValid = argEnrollments_in->isValid();
-        if (!gradesValid || !enrollmentsValid)
-        {
-            if (!gradesValid) 
-                argGrades_in->logArgCount(std::cout);
-            if (!enrollmentsValid)
-                argEnrollments_in->logArgCount(std::cout);
-
-            return std::nullopt;
-        }
-
-        // check that grades and enrollments are the same size
-        if (argGrades_in->inputs.size() != argEnrollments_in->inputs.size())
-        {
-            std::cout << "All module codes must have a corresponding grade" << std::endl;
-            return std::nullopt;
-        }
-
-
-        // safely parse the grades to vector of float
-        auto gradesParse = safeParse<std::vector<std::string>, std::vector<float>> (argGrades_in->inputs, [](const std::vector<std::string>& input) {
-            // map vector of string to vector of float
-            return mapVector<std::string, float> (input, [](std::string& item) {
-                return std::stof(item);
+            // safely parse the grades to vector of float
+            auto gradesParse = safeParse<std::vector<std::string>, std::vector<float>>(argGrades_in->inputs, [](const std::vector<std::string>& input) {
+                // map vector of string to vector of float
+                return mapVector<std::string, float>(input, [](std::string& item) {
+                    return std::stof(item);
+                });
             });
-        });
 
-        ENSURE_HASVALUE(gradesParse, "Grades", "All provides entries must be numbers");
+            // check that grades and enrollments are the same size
+            if (argGrades_in->inputs.size() != argEnrollments_in->inputs.size())
+            {
+                std::cout << "All module codes must have a corresponding grade" << std::endl;
+                return std::nullopt;
+            }
+
+            ENSURE_HASVALUE(gradesParse, "Grades", "All provides entries must be numbers");
+            grades = *gradesParse;
+        }
+        else {
+            grades.resize(argEnrollments_in->inputs.size());
+            std::fill(grades.begin(), grades.end(), -1);
+        }
 
         // set data
         record.enrollments = argEnrollments_in->inputs;
-        record.grades = *gradesParse;
+        record.grades = grades;
     }
 
     return record;

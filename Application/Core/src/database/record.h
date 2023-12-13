@@ -24,6 +24,7 @@ private:
 
 private:
 	std::string fieldToString(RecordField field);
+	std::string fieldToDisplayString(RecordField field);
 
 public:
 	Record() = default;
@@ -36,7 +37,7 @@ public:
 	std::string phone;
 
 
-	void addEnrollmentAndGrade(std::string enrollment, float grade);
+	void setEnrollmentAndGrade(const std::string& enrollment, float grade);
 	std::string getFullDisplayString();
 	std::string getDisplayStringForFields(std::vector<RecordField> fields);
 	void writeTag(std::ostream& stream, const char* tag, const std::string& content);

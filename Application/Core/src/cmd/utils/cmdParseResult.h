@@ -20,5 +20,6 @@ namespace CMDUtils
 		bool hasResult(const std::string& tag);
 		bool hasUnrequestedArgs();
 		std::vector<std::string>& getUnrequestedArgs();
+		void logUnrequestedArgs(std::ostream& stream);
 	};
 }

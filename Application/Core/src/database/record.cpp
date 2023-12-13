@@ -12,8 +12,25 @@ std::map<RecordField, std::string> Record::s_fieldNames =
 	{ RecordField::PHONE, "Phone" }
 };
 
-void Record::addEnrollmentAndGrade(std::string enrollment, float grade)
+//void Record::addEnrollmentAndGrade(const std::string& enrollment, float grade)
+//{
+//	this->enrollments.push_back(enrollment);
+//	this->grades.push_back(grade);
+//}
+
+void Record::setEnrollmentAndGrade(const std::string& enrollment, float grade)
 {
+	auto itr = std::find(this->enrollments.begin(), this->enrollments.end(), enrollment);
+	
+	// if the enrollment exists within the enrollments list
+	if (itr != this->enrollments.end())
+	{
+		uint32_t index = itr - this->enrollments.begin();
+		this->grades[index] = grade;
+		return;
+	}
+
+	// if it is not included
 	this->enrollments.push_back(enrollment);
 	this->grades.push_back(grade);
 }
@@ -37,6 +54,20 @@ std::string Record::fieldToString(RecordField field)
 	}
 }
 
+std::string Record::fieldToDisplayString(RecordField field)
+{
+	// custom stringify function for when a grade is not present (signified by it being -1)
+	if (field == RecordField::GRADES)
+		return stringifyList<float>(this->grades, [](const float& item, bool last, std::stringstream& builder) {
+			if (item == -1)
+				builder << "(no grade)" << (last ? "" : " ");
+			else
+				builder << item << (last ? "" : " ");
+		});
+
+	return this->fieldToString(field);
+}
+
 std::string Record::getFullDisplayString()
 {
 	return this->getDisplayStringForFields({ RecordField::SID, RecordField::NAME, RecordField::ENROLLMENTS, RecordField::GRADES, RecordField::PHONE });
@@ -45,7 +76,7 @@ std::string Record::getFullDisplayString()
 std::string Record::getDisplayStringForFields(std::vector<RecordField> fields)
 {
 	return stringifyList<RecordField>(fields, [&](const RecordField& item, bool last, std::stringstream& builder) {
-		builder << this->getRecordName(item) << ":\n  " + this->fieldToString(item) << "\n";
+		builder << this->getRecordName(item) << ":\n  " + this->fieldToDisplayString(item) << "\n";
 	});
 }
 

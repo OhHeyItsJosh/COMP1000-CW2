@@ -92,13 +92,7 @@ int main(int argc, const char *argv[])
     });
 
     if (parsedArgs.hasUnrequestedArgs())
-    {
-        // print out the provided args that are not recognised
-        std::cout << "The following arguments could not be recognised or are duplicates of existing arguments:\n -> "
-            << stringifyList<std::string>(parsedArgs.getUnrequestedArgs(), [](const std::string& item, bool last, std::stringstream& builder) {
-            builder << "\"" << item << "\"" << (last ? "" : ", ");
-         }) << std::endl;
-    }
+        parsedArgs.logUnrequestedArgs(std::cout);
 
     //Scan command line for -db switch
     CMDTagParserResult* db_in = parsedArgs.getResult(ARG_DB);

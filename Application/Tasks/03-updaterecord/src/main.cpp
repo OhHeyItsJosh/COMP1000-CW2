@@ -5,8 +5,10 @@
 #include <regex>
 #include <map>
 #include <string>
-using namespace std;
 
+#include "main.h"
+#include "coreUtils.h"
+#include "coreModels.h"
 /*
  * Updates an EXISTING user in an existing database file
  *
@@ -98,21 +100,181 @@ using namespace std;
 
 // Main program here
 
-int main(int argc, char *argv[])
+#define ARG_DB "-db"
+#define ARG_SID "-sid"
+
+#define ARG_NAME "-name"
+#define ARG_PHONE "-phone"
+#define ARG_GRADE "-grade"
+#define ARG_MODULE "-modulecode"
+
+int main(int argc, const char *argv[])
 {
-    //if (argc == 1) {
-    //    //Welcome message
-    //    cout << "updaterecord (c)2023" << endl;
+    Database database;
+    if (argc == 1) {
+        //Welcome message
+        std::cout << "updaterecord (c)2023" << std::endl;
 
-    //    //Create some test data
-    //    createTestDB("computing.txt");
+        //Create some test data
+        database.createTestDB("computing.txt");
 
-    //    //Done
-    //    return EXIT_SUCCESS;
-    //}
+        //Done
+        return EXIT_SUCCESS;
+    }
 
-    //Record s;
+    CMDParseResult parsedArgs = CMDUtils::parseArgs(argc, argv, {
+        CMDTagParser::tagWithArgument(ARG_DB),
+        CMDTagParser::tagWithArgument(ARG_SID),
+        CMDTagParser::tagWithMultipleArguments(ARG_NAME, 2, -1),
+        CMDTagParser::tagWithArgument(ARG_PHONE),
+        CMDTagParser::tagWithArgument(ARG_GRADE),
+        CMDTagParser::tagWithArgument(ARG_MODULE),
+    });
 
+    if (parsedArgs.hasUnrequestedArgs())
+        parsedArgs.logUnrequestedArgs(std::cout);
 
+    // check that db is provided
+    CMDTagParserResult* argDb_in = parsedArgs.getResult(ARG_DB);
+    if (argDb_in == nullptr || !argDb_in->isValid())
+    {
+        if (argDb_in) argDb_in->logArgCount(std::cout);
+        std::cout << "Please provide a database with '-db <filename>'" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    // import the database
+    std::string databaseName = argDb_in->getSingletonInput();
+    bool importSuccess = database.importFromFile(databaseName);
+    if (!importSuccess)
+    {
+        std::cout << "Provided database could not be loaded, please make sure the file you provided exists and is a valid database file" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    // get student ID input
+    CMDTagParserResult* argSid_in = parsedArgs.getResult(ARG_SID);
+    if (argSid_in == nullptr || !argSid_in->isValid())
+    {
+        if (argSid_in) argSid_in->logArgCount(std::cout);
+        std::cout << "Please provide the SID of the record you would like to update: '-sid <student id>'" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    // parse student id
+    std::optional<uint32_t> parsedSID = safeParse<std::string, uint32_t>(argSid_in->getSingletonInput(), [](const std::string& input) {
+        return stoi(input);
+    });
+    if (!parsedSID.has_value())
+    {
+        std::cout << "SID could not be parsed, please make sure it is a valid integer" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    // find record for provided sid if it exists
+    Record* record = database.getRecord(*parsedSID);
+    if (record == nullptr)
+    {
+        std::cout << "Provided Student ID could not be found in the database, make sure this student exists" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    // handle the field changes
+    std::vector<RecordField> changedFields;
+    bool changeSuccess = handleChanges(*record, parsedArgs, changedFields);
+    if (!changeSuccess)
+        return EXIT_FAILURE;
+
+    if (changedFields.size() == 0)
+    {
+        std::cout << "No fields where changed, fields are: '-name <name>', '-phone <phone>', '-modulecode <module code>', '-grade <grade> (modulecode must be present)" << std::endl;
+        return EXIT_SUCCESS;
+    }
+
+    bool saveSuccess = database.exportToFile(databaseName);
+    if (!saveSuccess)
+    {
+        std::cout << "Error: database file '" << databaseName << "' could not be saved" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    // print what got changed
+    std::cout << "Successfully updated record!\n" 
+        << "Changed field(s): "
+
+        << stringifyList<RecordField>(changedFields, [](const RecordField& field, bool last, std::stringstream& builder) {
+            builder << "'" << Record::getRecordName(field) << "'" << (last ? "" : ", ");
+        }) << "\n"
+
+        << "For record with sid: '" << record->sid << "'"
+        << std::endl;
     return EXIT_SUCCESS;
+}
+
+
+
+// macro for testing whether arg is valid, takes a pointer to CMDTagParserResult (provided arg must not be null)
+//#define DEFAULT_ARG_VALID_CHECK(arg) if (!arg->isValid()) \
+//{\
+//    arg->logArgCount(std::cout); \
+//    return false; \
+//}
+
+bool handleChanges(Record& record, CMDParseResult& parsedArgs, std::vector<RecordField>& in_changedFields)
+{
+    // process name change
+    CMDTagParserResult* argName_in = parsedArgs.getResult(ARG_NAME);
+    if (argName_in != nullptr)
+    {
+        ENSURE_ARG_VALID(argName_in, false);
+        record.name = defaultStringifyList(argName_in->inputs);
+        in_changedFields.push_back(RecordField::NAME);
+    }
+
+    // process phone number change
+    CMDTagParserResult* argPhone_in = parsedArgs.getResult(ARG_PHONE);
+    if (argPhone_in != nullptr)
+    {
+        ENSURE_ARG_VALID(argPhone_in, false);
+        record.phone = argPhone_in->getSingletonInput();
+        in_changedFields.push_back(RecordField::PHONE);
+    }
+
+    // process changes to grades / modules
+    CMDTagParserResult* argModule_in = parsedArgs.getResult(ARG_MODULE);
+    CMDTagParserResult* argGrade_in = parsedArgs.getResult(ARG_GRADE);
+    if (argModule_in != nullptr || argGrade_in != nullptr)
+    {
+        // check that a module code is provided, (if it is not, that means only a grade was provided)
+        ENSURE_REQUIRED_ARG_VALID(argModule_in, "-module", "A corresponding module must be provided for your grade: '-module <module code>", false);
+        in_changedFields.push_back(RecordField::ENROLLMENTS);
+
+        // set the grade depending on whether one was provided, default is -1 if not provided
+        float grade;
+
+        if (argGrade_in != nullptr)
+        {
+            ENSURE_ARG_VALID(argGrade_in, false);
+
+            // attempt to parse grade
+            auto gradeParse = safeParse<std::string, float>(argGrade_in->getSingletonInput(), [](const std::string& input) {
+                return std::stof(input);
+            });
+            if (!gradeParse.has_value())
+            {
+                std::cout << "One or more of the grades provided could not be parsed, please make sure they are valid numbers" << std::endl;
+                return false;
+            }
+
+            grade = *gradeParse;
+            in_changedFields.push_back(RecordField::GRADES);
+        }
+        else {
+            grade = -1;
+        }
+
+        record.setEnrollmentAndGrade(argModule_in->getSingletonInput(), grade);
+    }
+
+    return true;
 }
