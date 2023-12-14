@@ -16,8 +16,10 @@ namespace CMDUtils
 		CMDTagParser() = default;
 		CMDTagParser(const std::string& tag, bool takeData, uint32_t minArgCount, uint32_t maxArgCount);
 		CMDTagParser(const std::string& tag);
+
 		static CMDTagParser tagWithArgument(const std::string& tag);
 		static CMDTagParser tagWithMultipleArguments(const std::string& tag, uint32_t minArgs, uint32_t maxArgs);
+		static CMDTagParser basicFlag(const std::string& tag);
 
 	public:
 		std::string& getTag();

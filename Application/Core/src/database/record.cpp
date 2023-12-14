@@ -54,18 +54,29 @@ std::string Record::fieldToString(RecordField field)
 	}
 }
 
+#define NO_VALUE "(no value)"
+
 std::string Record::fieldToDisplayString(RecordField field)
 {
 	// custom stringify function for when a grade is not present (signified by it being -1)
 	if (field == RecordField::GRADES)
+	{
+		if (this->grades.size() == 0)
+			return NO_VALUE;
+
 		return stringifyList<float>(this->grades, [](const float& item, bool last, std::stringstream& builder) {
 			if (item == -1)
 				builder << "(no grade)" << (last ? "" : " ");
 			else
 				builder << item << (last ? "" : " ");
 		});
+	}
 
-	return this->fieldToString(field);
+	std::string stringForField = this->fieldToString(field);
+	if (stringForField == "")
+		return NO_VALUE;
+
+	return std::move(stringForField);
 }
 
 std::string Record::getFullDisplayString()

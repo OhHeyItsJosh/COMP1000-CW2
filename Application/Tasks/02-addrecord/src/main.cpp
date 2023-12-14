@@ -147,20 +147,15 @@ int main(int argc, const char *argv[])
 
     // get the database input
     CMDTagParserResult* argDb_in = parserResult.getResult(ARG_DB);
-    if (argDb_in == nullptr || !argDb_in->isValid())
-    {
-        if (argDb_in) argDb_in->logArgCount(std::cout);
-        std::cout << "Please provide a database with '-db <filename>'" << std::endl;
-        return EXIT_FAILURE;
-    }
+    ENSURE_REQUIRED_ARG_VALID(argDb_in, "Database", "'-db <filename>'", EXIT_FAILURE);
 
     // import the database
     std::string databaseName = argDb_in->getSingletonInput();
     bool importSuccess = database.importFromFile(databaseName);
     if (!importSuccess)
     {
-        std::cout << "Provided database could not be loaded, please make sure the file you provided exists and is a valid database file" << std::endl;
-        return EXIT_FAILURE;
+        database.exportToFile(databaseName);
+        std::cout << "Provided database could not be loaded, a blank database '" << databaseName << "' has been created" << std::endl;
     }
 
     // attempt to parse the record from the inputs
@@ -169,21 +164,16 @@ int main(int argc, const char *argv[])
         return EXIT_FAILURE;
 
     // add the record to the database and write the database to a file
-    Record& record = *createdRecord;
-    database.addRecord(record);
+    database.addRecord(*createdRecord);
     database.exportToFile(databaseName);
 
-    std::cout << "Successfully added new record to '" << databaseName << "'" << std::endl;
+    std::cout << "Successfully added record with sid '" << createdRecord->sid << "' to '" << databaseName << "'" << std::endl;
     return EXIT_SUCCESS;
 }
 
 
 
-// TODO: move this parse function into a common file so I can reuse it for task 3
-
-
-// macro to handle when a required parameter is not provided
-//#define ENSURE_ARG_VALID(arg, argName, argHint) if (arg == nullptr || !arg->isValid()) { if (arg != nullptr) arg->logArgCount(std::cout); printf("%s parameter is required: '%s'", argName, argHint); return std::nullopt; }
+// macro to make sure an optional has a value
 #define ENSURE_HASVALUE(optional, name, hint) if (!optional.has_value()) { printf("%s could not be parsed: %s", name, hint); return std::nullopt; }
 
 std::optional<Record> parseRecordInput(CMDUtils::CMDParseResult& parsedArgs, Database& database)
@@ -192,8 +182,8 @@ std::optional<Record> parseRecordInput(CMDUtils::CMDParseResult& parsedArgs, Dat
     CMDTagParserResult* argSid_in = parsedArgs.getResult(ARG_SID);
     CMDTagParserResult* argName_in = parsedArgs.getResult(ARG_NAME);
 
-    ENSURE_REQUIRED_ARG_VALID(argSid_in, "Student Id", "-sid <student id>", std::nullopt);
-    ENSURE_REQUIRED_ARG_VALID(argName_in, "Name", "-name <student name>", std::nullopt);
+    ENSURE_REQUIRED_ARG_VALID(argSid_in, "Student Id", "'-sid <student id>'", std::nullopt);
+    ENSURE_REQUIRED_ARG_VALID(argName_in, "Name", "'-name <student name>'", std::nullopt);
     
     // create the record
     Record record;
@@ -221,11 +211,7 @@ std::optional<Record> parseRecordInput(CMDUtils::CMDParseResult& parsedArgs, Dat
     // set phone if provided
     if (argPhone_in != nullptr)
     {
-        if (!argPhone_in->isValid())
-        {
-            argPhone_in->logArgCount(std::cout);
-            return std::nullopt;
-        }
+        ENSURE_ARG_VALID(argPhone_in, std::nullopt);
         record.phone = argPhone_in->getSingletonInput();
     }
 

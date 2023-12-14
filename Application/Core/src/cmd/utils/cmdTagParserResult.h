@@ -12,7 +12,7 @@
 
 #define ENSURE_REQUIRED_ARG_VALID(arg, argName, argHint, returnVal) if (arg == nullptr) \
 { \
-	printf("%s parameter is required: '%s'", argName, argHint); \
+	printf("%s parameter is required: %s", argName, argHint); \
 	return returnVal; \
 } \
 else { \

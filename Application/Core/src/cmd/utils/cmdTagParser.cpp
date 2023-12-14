@@ -20,6 +20,11 @@ namespace CMDUtils
 		return CMDTagParser(tag, true, minArgs, maxArgs);
 	}
 
+	CMDTagParser CMDTagParser::basicFlag(const std::string& tag)
+	{
+		return CMDTagParser(tag);
+	}
+
 	std::string& CMDTagParser::getTag()
 	{
 		return m_tag;

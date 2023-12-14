@@ -136,30 +136,20 @@ int main(int argc, const char *argv[])
 
     // check that db is provided
     CMDTagParserResult* argDb_in = parsedArgs.getResult(ARG_DB);
-    if (argDb_in == nullptr || !argDb_in->isValid())
-    {
-        if (argDb_in) argDb_in->logArgCount(std::cout);
-        std::cout << "Please provide a database with '-db <filename>'" << std::endl;
-        return EXIT_FAILURE;
-    }
+    ENSURE_REQUIRED_ARG_VALID(argDb_in, "Database", "'-db <filename>'", EXIT_FAILURE);
 
     // import the database
     std::string databaseName = argDb_in->getSingletonInput();
     bool importSuccess = database.importFromFile(databaseName);
     if (!importSuccess)
     {
-        std::cout << "Provided database could not be loaded, please make sure the file you provided exists and is a valid database file" << std::endl;
-        return EXIT_FAILURE;
+        database.exportToFile(databaseName);
+        std::cout << "Provided database could not be loaded, a blank database '" << databaseName << "' has been created" << std::endl;
     }
 
     // get student ID input
     CMDTagParserResult* argSid_in = parsedArgs.getResult(ARG_SID);
-    if (argSid_in == nullptr || !argSid_in->isValid())
-    {
-        if (argSid_in) argSid_in->logArgCount(std::cout);
-        std::cout << "Please provide the SID of the record you would like to update: '-sid <student id>'" << std::endl;
-        return EXIT_FAILURE;
-    }
+    ENSURE_REQUIRED_ARG_VALID(argSid_in, "Student ID", "must provide the student ID for the record you would like to update with '-sid <student id>'", EXIT_FAILURE);
 
     // parse student id
     std::optional<uint32_t> parsedSID = safeParse<std::string, uint32_t>(argSid_in->getSingletonInput(), [](const std::string& input) {

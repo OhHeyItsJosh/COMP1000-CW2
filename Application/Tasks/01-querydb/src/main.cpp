@@ -84,11 +84,11 @@ int main(int argc, const char *argv[])
     // uses custom tag parsing system I built for this project.
     CMDParseResult parsedArgs = CMDUtils::parseArgs(argc, argv, {
         CMDTagParser::tagWithArgument(ARG_DB),
-        CMDTagParser(ARG_SHOWALL),
+        CMDTagParser::basicFlag(ARG_SHOWALL),
         CMDTagParser::tagWithArgument(ARG_SID),
-        CMDTagParser(ARG_SHOWNAME),
-        CMDTagParser(ARG_SHOWGRADES),
-        CMDTagParser(ARG_SHOWPHONE)
+        CMDTagParser::basicFlag(ARG_SHOWNAME),
+        CMDTagParser::basicFlag(ARG_SHOWGRADES),
+        CMDTagParser::basicFlag(ARG_SHOWPHONE)
     });
 
     if (parsedArgs.hasUnrequestedArgs())
@@ -96,20 +96,15 @@ int main(int argc, const char *argv[])
 
     //Scan command line for -db switch
     CMDTagParserResult* db_in = parsedArgs.getResult(ARG_DB);
-    if (db_in == nullptr || !db_in->isValid())
-    {
-        db_in->logArgCount(std::cout);
-        std::cout << "Please provide a database with '-db <filename>'" << std::endl;
-        return EXIT_FAILURE;
-    }
+    ENSURE_REQUIRED_ARG_VALID(db_in, "Database", "'-db <filename>'", EXIT_FAILURE);
 
     // import the database
     std::string dbName = db_in->getSingletonInput();
     bool importSuccessful = database.importFromFile(dbName);
     if (!importSuccessful)
     {
-        std::cout << "Provided database could not be loaded, please make sure the file you provided exists and is a valid database file" << std::endl;
-        return EXIT_FAILURE;
+        database.exportToFile(dbName);
+        std::cout << "Provided database could not be loaded, a blank database '" << dbName << "' has been created" << std::endl;
     }
 
     //*******************************
