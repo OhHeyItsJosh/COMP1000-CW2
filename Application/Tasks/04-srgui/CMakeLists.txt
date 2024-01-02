@@ -68,3 +68,9 @@ install(TARGETS srgui
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(srgui)
 endif()
+
+target_include_directories(srgui PRIVATE "../../Core/src/")
+target_link_libraries(srgui PUBLIC core)
+
+#add_subdirectory("../../Core/")
+#target_link_libraries(srgui PRIVATE core)

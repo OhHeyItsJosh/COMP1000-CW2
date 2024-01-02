@@ -4,6 +4,8 @@ project(core)
 file(GLOB_RECURSE MY_HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
 file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
-add_library(core ${MY_SOURCES})
+set(CMAKE_CXX_STANDARD 17)
+
+add_library(core ${MY_SOURCES} ${MY_HEADERS})
 target_include_directories(core PUBLIC ${MY_HEADERS})
 #target_sources(core)
