@@ -21,6 +21,7 @@ public:
 	bool importFromFile(std::string fileName);
 	bool exportToFile(std::string fileName);
 	void createTestDB(std::string name);
+    uint32_t entryCount();
 
 	bool hasRecord(uint32_t sid);
 	Record* getRecord(uint32_t sid);

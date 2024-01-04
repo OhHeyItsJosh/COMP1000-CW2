@@ -169,6 +169,11 @@ void Database::createTestDB(std::string name)
 
 }
 
+uint32_t Database::entryCount()
+{
+    return m_records.size();
+}
+
 bool Database::hasRecord(uint32_t sid)
 {
     return m_records.find(sid) != m_records.end();
