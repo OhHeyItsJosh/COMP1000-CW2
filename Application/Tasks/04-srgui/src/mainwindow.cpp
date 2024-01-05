@@ -6,8 +6,11 @@
 #include "QStandardItem"
 #include "QDebug"
 #include <optional>
+#include "QInputDialog"
 
 #include "coreUtils.h"
+#include "createrecorddialog.h"
+#include "dataValidation.h"
 
 #define ROW_ENROLLMENTS 0
 #define ROW_GRADES 1
@@ -17,7 +20,10 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    this->setEntryControlsEnabled(false);
+    this->updateMenuState();
+
+    ui->tbl_eg->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->tbl_eg->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), SLOT(on_eg_contextMenuRequested(QPoint)));
 }
 
 MainWindow::~MainWindow()
@@ -29,13 +35,16 @@ MainWindow::~MainWindow()
 void MainWindow::on_action_Open_Database_triggered()
 {
     QString databasePath = QFileDialog::getOpenFileName(this, "Open Database", "", "Text Files (*.txt)");
+    if (databasePath == "")
+        return;
+
     bool success = m_dbController.importDatabaseFile(databasePath.toStdString());
 
     QMessageBox message;
     if (success)
     {
         message.information(this, "Import Success", "Successfully imported databse from file");
-        ui->lbl_selectedDB->setText(databasePath.split("/").last());
+        this->updateMenuState();
         this->updateEntryDisplay(m_dbController.getCurrentRecord());
     }
     else
@@ -53,6 +62,13 @@ void MainWindow::updateEntryDisplay(Record* record)
         this->setEntryControlsEnabled(true);
     }
 
+    // set whether buttons are enabled or not
+    bool prevEnabled, nextEnabled;
+    m_dbController.getSwitcherActiveStates(prevEnabled, nextEnabled);
+    ui->btn_prev->setEnabled(prevEnabled);
+    ui->btn_next->setEnabled(nextEnabled);
+
+    // set text content for labels and text containers
     ui->val_sid->setText(QVariant(record->sid).toString());
     ui->txt_name->setText(QString::fromStdString(record->name));
     ui->txt_phone->setText(QString::fromStdString((record->phone)));
@@ -74,8 +90,34 @@ void MainWindow::updateEntryDisplay(Record* record)
         this->eg_setInactiveUpdate(ROW_GRADES, i);
 
         tableModel->setData(tableModel->index(ROW_ENROLLMENTS, i), QString::fromStdString(record->enrollments[i]));
-        tableModel->setData(tableModel->index(ROW_GRADES, i), QVariant(record->grades[i]).toString());
+        tableModel->setData(tableModel->index(ROW_GRADES, i), QString().setNum(record->grades[i], 'g', 6));
     }
+}
+
+void MainWindow::updateMenuState()
+{
+    // if there is a database
+    if (m_dbController.hasActiveDatabase())
+    {
+        this->setEntryControlsEnabled(true);
+        ui->action_Close->setEnabled(true);
+        ui->action_Save->setEnabled(true);
+        ui->btn_addEntry->setEnabled(true);
+        ui->lbl_selectedDB->setText(m_dbController.getDatabaseName());
+    }
+    // if there is no database
+    else {
+        this->setEntryControlsEnabled(false);
+        ui->action_Close->setEnabled(false);
+        ui->action_Save->setEnabled(false);
+        ui->btn_addEntry->setEnabled(false);
+        ui->val_sid->setText("");
+        ui->txt_name->setText("");
+        ui->txt_phone->setText("");
+        ui->tbl_eg->setColumnCount(0);
+        ui->lbl_selectedDB->setText("[No DB selected]");
+    }
+
 }
 
 
@@ -101,13 +143,9 @@ void MainWindow::setEntryControlsEnabled(bool enabled)
     ui->txt_name->setEnabled(enabled);
     ui->txt_phone->setEnabled(enabled);
     ui->tbl_eg->setEnabled(enabled);
-}
-
-
-void MainWindow::on_test_btn_clicked()
-{
-    auto model = ui->tbl_eg->model();
-    model->setData(model->index(0, 0), "Test");
+    ui->btn_removeEntry->setEnabled(enabled);
+    ui->btn_addEG->setEnabled(enabled);
+    ui->btn_search->setEnabled(enabled);
 }
 
 
@@ -119,6 +157,15 @@ void MainWindow::on_actionExit_triggered()
 
 void MainWindow::on_txt_name_editingFinished()
 {
+    //data authentication
+    const QString& input = ui->txt_name->text();
+    if (!DataValidation::wordCountCheck(input, 2, -1))
+    {
+        DataValidation::showInvalidBoundsMessage(this, 2, -1);
+        ui->txt_name->setText(QString::fromStdString(m_dbController.getCurrentRecord()->name));
+        return;
+    }
+
     // set record name to text content
     m_dbController.getCurrentRecord()->name = ui->txt_name->text().toStdString();
     m_dbController.setDirty(true);
@@ -127,6 +174,14 @@ void MainWindow::on_txt_name_editingFinished()
 
 void MainWindow::on_txt_phone_editingFinished()
 {
+    const QString& input = ui->txt_phone->text();
+    if (!DataValidation::wordCountCheck(input, 1, 1))
+    {
+        DataValidation::showInvalidBoundsMessage(this, 1, 1);
+        ui->txt_phone->setText(QString::fromStdString(m_dbController.getCurrentRecord()->phone));
+        return;
+    }
+
     // set record phone to text content
     m_dbController.getCurrentRecord()->phone = ui->txt_phone->text().toStdString();
     m_dbController.setDirty(true);
@@ -155,6 +210,14 @@ void MainWindow::on_tbl_eg_cellChanged(int row, int column)
     switch(row)
     {
     case ROW_ENROLLMENTS:
+        // don't really like this way of authentication, might change it if i have the time
+        if (!DataValidation::wordCountCheck(newText, 1, 1))
+        {
+            DataValidation::showInvalidBoundsMessage(this, 1, 1);
+            ui->tbl_eg->item(row, column)->setText(QString::fromStdString(currentRecord->enrollments[column]));
+            return;
+        }
+
         currentRecord->enrollments[column] = newText.toStdString();
         m_dbController.setDirty(true);
         break;
@@ -180,7 +243,6 @@ void MainWindow::on_tbl_eg_cellChanged(int row, int column)
 void MainWindow::eg_setInactiveUpdate(int row, int column)
 {
     uint32_t cellIndex = row * ui->tbl_eg->columnCount() + column;
-    // qDebug() << "Setting Cell with index " << cellIndex << " inactive. Length is " << m_isActiveUpdate.size();
     m_isActiveUpdate[cellIndex] = false;
 }
 
@@ -211,13 +273,116 @@ void MainWindow::on_action_Close_triggered()
     }
 
     m_dbController.closeDatabase();
+    this->updateMenuState();
+}
 
-    ui->val_sid->setText("");
-    ui->txt_name->setText("");
-    ui->txt_phone->setText("");
-    ui->tbl_eg->setColumnCount(0);
-    ui->lbl_selectedDB->setText("[No DB selected]");
+void MainWindow::on_btn_addEntry_clicked()
+{
+    CreateRecordDialog input(
+        // callback for when the form is submitted
+        [&](uint32_t sid, QString& name, QString& message)
+        {
+            if (!DataValidation::wordCountCheck(name, 2, -1))
+            {
+                message = "Name must have at least 2 words";
+                return false;
+            }
 
-    this->setEntryControlsEnabled(false);
+            bool success = m_dbController.createRecord(sid, name);
+            if (!success)
+            {
+                message = QString("Record with SID: ") + QVariant(sid).toString() + " already exists";
+                return false;
+            }
+
+            this->updateEntryDisplay(m_dbController.getCurrentRecord());
+            return true;
+        },
+    this);
+
+    // show the form
+    input.exec();
+}
+
+void MainWindow::on_btn_removeEntry_clicked()
+{
+    // perform confirmation check
+    QMessageBox::StandardButton response = QMessageBox::question(this, "Remove entry?", "Are you sure you want to remove this entry?");
+    if (response != QMessageBox::StandardButton::Yes)
+        return;
+
+    // remove the record and update display
+    m_dbController.deleteCurrentRecord();
+    this->updateEntryDisplay(m_dbController.getCurrentRecord());
+}
+
+void MainWindow::on_eg_contextMenuRequested(QPoint point)
+{
+    int column = ui->tbl_eg->horizontalHeader()->logicalIndexAt(point);
+
+    // create the menu
+    QMenu* menu = new QMenu(this);
+    menu->setAttribute(Qt::WA_DeleteOnClose);
+
+    // create the delete action and bind it to callback
+    QAction* deleteAction = new QAction("Delete", this);
+    connect(deleteAction, &QAction::triggered, this, [this, column]{ on_egDelete(column); });
+    menu->addAction(deleteAction);
+
+    // show the popup where the user clicks
+    menu->popup(ui->tbl_eg->horizontalHeader()->viewport()->mapToGlobal(point));
+}
+
+void MainWindow::on_egDelete(uint32_t column)
+{
+    //
+    QMessageBox::StandardButton response = QMessageBox::question(this, "Remove?", "Are you sure you want to remove this enrollment and grade?");
+    if (response != QMessageBox::StandardButton::Yes)
+        return;
+
+    // remove the current column from the record
+    Record& record = *m_dbController.getCurrentRecord();
+
+    record.enrollments.erase(record.enrollments.begin() + column);
+    record.grades.erase(record.grades.begin() + column);
+
+    this->updateEntryDisplay(&record);
+}
+
+
+void MainWindow::on_btn_addEG_clicked()
+{
+    Record& record = *m_dbController.getCurrentRecord();
+
+    record.enrollments.push_back(std::string("ENROLLMENT_") + std::to_string(record.enrollments.size() + 1));
+    record.grades.push_back(0);
+
+    this->updateEntryDisplay(&record);
+
+    // set focus to the new enrollments cell
+    ui->tbl_eg->setFocus();
+    ui->tbl_eg->setCurrentCell(ROW_ENROLLMENTS, record.enrollments.size() - 1);
+}
+
+
+void MainWindow::on_btn_search_clicked()
+{
+    // get sid input
+    bool ok;
+    int32_t sidInput = QInputDialog::getInt(this, "Search Record", "SID:", QLineEdit::Normal, 0, 2147483647, 1, &ok);
+
+    // return if the user aborted
+    if (!ok)
+        return;
+
+    // set the record and update display
+    Record* record = m_dbController.setEntry(sidInput);
+    if (record == nullptr)
+    {
+        QMessageBox::critical(this, "Not found", "The provided SID does not exist within this database");
+        return;
+    }
+
+    this->updateEntryDisplay(record);
 }
 

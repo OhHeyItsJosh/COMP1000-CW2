@@ -1,6 +1,7 @@
 #include "databaseController.h"
 
 #include "QMessageBox"
+#include <algorithm>
 
 Record* DatabaseController::previousEntry()
 {
@@ -16,6 +17,16 @@ Record* DatabaseController::nextEntry()
         m_entryIndex++;
 
     return m_database.getRecord(m_keyList[m_entryIndex]);
+}
+
+Record* DatabaseController::setEntry(uint32_t sid)
+{
+    int32_t index = this->indexOfRecord(sid);
+    if (index == -1)
+        return nullptr;
+
+    m_entryIndex = index;
+    return this->getCurrentRecord();
 }
 
 Record* DatabaseController::getCurrentRecord()
@@ -79,4 +90,56 @@ void DatabaseController::setDirty(bool dirty)
 bool DatabaseController::isDirty()
 {
     return m_changesMade;
+}
+
+void DatabaseController::getSwitcherActiveStates(bool& in_prev, bool& in_next)
+{
+    if (m_entryIndex == 0)
+        in_prev = false;
+    else
+        in_prev = true;
+
+    if (m_entryIndex >= m_keyList.size() - 1)
+        in_next = false;
+    else
+        in_next = true;
+}
+
+QString DatabaseController::getDatabaseName()
+{
+    return QString::fromStdString(m_databasePath).split("/").last();
+}
+
+bool DatabaseController::createRecord(uint32_t sid, QString& name)
+{
+    if (m_database.hasRecord(sid))
+        return false;
+
+    Record record;
+    record.sid = sid;
+    record.name = name.toStdString();
+
+    m_database.addRecord(record);
+    this->createKeyList();
+    m_entryIndex = this->indexOfRecord(sid);
+    return true;
+}
+
+void DatabaseController::deleteCurrentRecord()
+{
+    m_database.removeRecord(m_keyList[m_entryIndex]);
+
+    m_keyList.erase(m_keyList.begin() + m_entryIndex);
+    m_entryIndex = std::max<int32_t>(m_entryIndex - 1, 0);
+}
+
+int32_t DatabaseController::indexOfRecord(uint32_t sid)
+{
+    auto iter =  std::find(m_keyList.begin(), m_keyList.end(), sid);
+    if (iter == m_keyList.end())
+    {
+        return -1;
+    }
+
+    return iter - m_keyList.begin();
 }

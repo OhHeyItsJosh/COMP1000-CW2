@@ -26,5 +26,6 @@ public:
 	bool hasRecord(uint32_t sid);
 	Record* getRecord(uint32_t sid);
 	void addRecord(Record& record);
+    void removeRecord(uint32_t sid);
 	void forEachRecord(std::function<void(Record&, bool)> callback);
 };

@@ -19,13 +19,15 @@ public:
     ~MainWindow();
 
 private slots:
+    void on_eg_contextMenuRequested(QPoint point);
+
+    void on_egDelete(uint32_t column);
+
     void on_action_Open_Database_triggered();
 
     void on_btn_next_clicked();
 
     void on_btn_prev_clicked();
-
-    void on_test_btn_clicked();
 
     void on_actionExit_triggered();
 
@@ -39,6 +41,14 @@ private slots:
 
     void on_action_Close_triggered();
 
+    void on_btn_addEntry_clicked();
+
+    void on_btn_removeEntry_clicked();
+
+    void on_btn_addEG_clicked();
+
+    void on_btn_search_clicked();
+
 private:
     Ui::MainWindow *ui;
     DatabaseController m_dbController;
@@ -46,6 +56,7 @@ private:
 
 private:
     void updateEntryDisplay(Record* record);
+    void updateMenuState();
     void setEntryControlsEnabled(bool enabled);
     void eg_setInactiveUpdate(int row, int column);
 };
