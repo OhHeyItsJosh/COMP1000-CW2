@@ -49,15 +49,21 @@ private slots:
 
     void on_btn_search_clicked();
 
+    void on_action_New_triggered();
+
+    void on_action_CreateTestDB_triggered();
+
 private:
     Ui::MainWindow *ui;
     DatabaseController m_dbController;
     std::vector<bool> m_isActiveUpdate;
 
 private:
+    void clearEntryDisplay();
     void updateEntryDisplay(Record* record);
     void updateMenuState();
     void setEntryControlsEnabled(bool enabled);
     void eg_setInactiveUpdate(int row, int column);
+    bool checkUnsavedChanges();
 };
 #endif // MAINWINDOW_H

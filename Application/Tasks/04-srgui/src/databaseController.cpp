@@ -37,10 +37,17 @@ Record* DatabaseController::getCurrentRecord()
     return m_database.getRecord(m_keyList[m_entryIndex]);
 }
 
-bool DatabaseController::importDatabaseFile(std::string file)
+void DatabaseController::createTestDB(const QString& path)
 {
+    m_database.createTestDB(path.toStdString());
+}
+
+bool DatabaseController::importDatabaseFile(const QString& file)
+{
+    std::string fileStd = file.toStdString();
+
     Database importedDB;
-    bool success = importedDB.importFromFile(file);
+    bool success = importedDB.importFromFile(fileStd);
 
     if (success)
     {
@@ -48,8 +55,9 @@ bool DatabaseController::importDatabaseFile(std::string file)
         m_database = importedDB;
         this->createKeyList();
         m_entryIndex = 0;
-        m_databasePath = file;
+        m_databasePath = fileStd;
         m_activeDatabase = true;
+        m_changesMade = false;
     }
 
     return success;

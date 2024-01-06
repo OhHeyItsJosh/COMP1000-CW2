@@ -36,7 +36,7 @@ bool Database::importFromFile(std::string fileName)
     DBReadState state = DBReadState::START;
 
     //Locals used for navigating the database 
-    Record nextRecord;
+    Record nextRecord{ 0 };
     
     // parsers for parsing each tag
     std::map<std::string, std::function<void(std::string&)>> tagParsers = {

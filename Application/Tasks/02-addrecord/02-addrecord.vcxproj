@@ -140,11 +140,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h" />
     <ClInclude Include="src\main.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="02-addrecord.rc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Core.vcxproj">

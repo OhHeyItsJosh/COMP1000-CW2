@@ -5,10 +5,8 @@
 #include "QMessageBox"
 #include "QStandardItem"
 #include "QDebug"
-#include <optional>
 #include "QInputDialog"
 
-#include "coreUtils.h"
 #include "createrecorddialog.h"
 #include "dataValidation.h"
 
@@ -22,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     this->updateMenuState();
 
+    // establish connection for custom context menu callback on enrollments / grades table
     ui->tbl_eg->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tbl_eg->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), SLOT(on_eg_contextMenuRequested(QPoint)));
 }
@@ -34,21 +33,31 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_action_Open_Database_triggered()
 {
+    if (!this->checkUnsavedChanges())
+        return;
+
     QString databasePath = QFileDialog::getOpenFileName(this, "Open Database", "", "Text Files (*.txt)");
     if (databasePath == "")
         return;
 
-    bool success = m_dbController.importDatabaseFile(databasePath.toStdString());
+    bool success = m_dbController.importDatabaseFile(databasePath);
 
-    QMessageBox message;
     if (success)
     {
-        message.information(this, "Import Success", "Successfully imported databse from file");
+        QMessageBox::information(this, "Import Success", "Successfully imported databse from file");
         this->updateMenuState();
         this->updateEntryDisplay(m_dbController.getCurrentRecord());
     }
     else
-        message.critical(this, "Import failed", "Database could not be imported");
+        QMessageBox::critical(this, "Import failed", "Database could not be imported");
+}
+
+void MainWindow::clearEntryDisplay()
+{
+    ui->val_sid->setText("");
+    ui->txt_name->setText("");
+    ui->txt_phone->setText("");
+    ui->tbl_eg->setColumnCount(0);
 }
 
 void MainWindow::updateEntryDisplay(Record* record)
@@ -56,6 +65,7 @@ void MainWindow::updateEntryDisplay(Record* record)
     if (record == nullptr)
     {
         this->setEntryControlsEnabled(false);
+        this->clearEntryDisplay();
         return;
     }
     else {
@@ -111,11 +121,8 @@ void MainWindow::updateMenuState()
         ui->action_Close->setEnabled(false);
         ui->action_Save->setEnabled(false);
         ui->btn_addEntry->setEnabled(false);
-        ui->val_sid->setText("");
-        ui->txt_name->setText("");
-        ui->txt_phone->setText("");
-        ui->tbl_eg->setColumnCount(0);
-        ui->lbl_selectedDB->setText("[No DB selected]");
+        this->clearEntryDisplay();
+         ui->lbl_selectedDB->setText("[No DB selected]");
     }
 
 }
@@ -157,40 +164,49 @@ void MainWindow::on_actionExit_triggered()
 
 void MainWindow::on_txt_name_editingFinished()
 {
-    //data authentication
+    Record* record = m_dbController.getCurrentRecord();
+    if (record->name == ui->txt_name->text().toStdString())
+        return;
+
+    // data validation
     const QString& input = ui->txt_name->text();
     if (!DataValidation::wordCountCheck(input, 2, -1))
     {
         DataValidation::showInvalidBoundsMessage(this, 2, -1);
-        ui->txt_name->setText(QString::fromStdString(m_dbController.getCurrentRecord()->name));
+        ui->txt_name->setText(QString::fromStdString(record->name));
         return;
     }
 
     // set record name to text content
-    m_dbController.getCurrentRecord()->name = ui->txt_name->text().toStdString();
+    record->name = ui->txt_name->text().toStdString();
     m_dbController.setDirty(true);
 }
 
 
 void MainWindow::on_txt_phone_editingFinished()
 {
+    Record* record = m_dbController.getCurrentRecord();
+    if (record->phone == ui->txt_phone->text().toStdString())
+        return;
+
+    // data validation
     const QString& input = ui->txt_phone->text();
     if (!DataValidation::wordCountCheck(input, 1, 1))
     {
         DataValidation::showInvalidBoundsMessage(this, 1, 1);
-        ui->txt_phone->setText(QString::fromStdString(m_dbController.getCurrentRecord()->phone));
+        ui->txt_phone->setText(QString::fromStdString(record->phone));
         return;
     }
 
     // set record phone to text content
-    m_dbController.getCurrentRecord()->phone = ui->txt_phone->text().toStdString();
+    record->phone = ui->txt_phone->text().toStdString();
     m_dbController.setDirty(true);
 }
 
 
 void MainWindow::on_tbl_eg_cellChanged(int row, int column)
 {
-    // check whether the current update is an active update
+    // check whether the current update is an active update (prevents unnecessary saves and counted changes when switching records)
     uint32_t cellIndex = row * ui->tbl_eg->columnCount() + column;
     if (!m_isActiveUpdate[cellIndex])
     {
@@ -210,7 +226,7 @@ void MainWindow::on_tbl_eg_cellChanged(int row, int column)
     switch(row)
     {
     case ROW_ENROLLMENTS:
-        // don't really like this way of authentication, might change it if i have the time
+        // bounds validation system is clunky, could be improved with a more uniform system
         if (!DataValidation::wordCountCheck(newText, 1, 1))
         {
             DataValidation::showInvalidBoundsMessage(this, 1, 1);
@@ -242,6 +258,7 @@ void MainWindow::on_tbl_eg_cellChanged(int row, int column)
 
 void MainWindow::eg_setInactiveUpdate(int row, int column)
 {
+    // set inactive flag for cell
     uint32_t cellIndex = row * ui->tbl_eg->columnCount() + column;
     m_isActiveUpdate[cellIndex] = false;
 }
@@ -266,11 +283,9 @@ void MainWindow::on_action_Save_triggered()
 
 void MainWindow::on_action_Close_triggered()
 {
-    if (m_dbController.isDirty())
-    {
-        qDebug() << "Unsaved changes";
-        // TODO: implement unsaved changes check
-    }
+    // prompt user to save
+    if (!this->checkUnsavedChanges())
+        return;
 
     m_dbController.closeDatabase();
     this->updateMenuState();
@@ -282,6 +297,7 @@ void MainWindow::on_btn_addEntry_clicked()
         // callback for when the form is submitted
         [&](uint32_t sid, QString& name, QString& message)
         {
+            // word count validation
             if (!DataValidation::wordCountCheck(name, 2, -1))
             {
                 message = "Name must have at least 2 words";
@@ -296,6 +312,7 @@ void MainWindow::on_btn_addEntry_clicked()
             }
 
             this->updateEntryDisplay(m_dbController.getCurrentRecord());
+            m_dbController.setDirty(true);
             return true;
         },
     this);
@@ -313,6 +330,7 @@ void MainWindow::on_btn_removeEntry_clicked()
 
     // remove the record and update display
     m_dbController.deleteCurrentRecord();
+    m_dbController.setDirty(true);
     this->updateEntryDisplay(m_dbController.getCurrentRecord());
 }
 
@@ -335,7 +353,7 @@ void MainWindow::on_eg_contextMenuRequested(QPoint point)
 
 void MainWindow::on_egDelete(uint32_t column)
 {
-    //
+    // delete prompt
     QMessageBox::StandardButton response = QMessageBox::question(this, "Remove?", "Are you sure you want to remove this enrollment and grade?");
     if (response != QMessageBox::StandardButton::Yes)
         return;
@@ -354,10 +372,12 @@ void MainWindow::on_btn_addEG_clicked()
 {
     Record& record = *m_dbController.getCurrentRecord();
 
+    // add new enrollment and grade
     record.enrollments.push_back(std::string("ENROLLMENT_") + std::to_string(record.enrollments.size() + 1));
     record.grades.push_back(0);
 
     this->updateEntryDisplay(&record);
+    m_dbController.setDirty(true);
 
     // set focus to the new enrollments cell
     ui->tbl_eg->setFocus();
@@ -386,3 +406,74 @@ void MainWindow::on_btn_search_clicked()
     this->updateEntryDisplay(record);
 }
 
+
+void MainWindow::on_action_New_triggered()
+{
+    if (!this->checkUnsavedChanges())
+        return;
+
+    QString savePath = QFileDialog::getSaveFileName(this, "Create Database", "", "Text Files (*.txt)");
+    if (savePath == "")
+        return;
+
+    qDebug() << savePath;
+
+    // create blank file
+    QFile file(savePath);
+    if (!file.open(QIODevice::ReadWrite))
+    {
+        QMessageBox::critical(this, "Write fail", "Failed to create new DB file");
+        return;
+    }
+
+    file.close();
+    QMessageBox::information(this, "Success", "Succesfully created new database file");
+
+    // import newly created file
+    m_dbController.importDatabaseFile(savePath);
+    this->updateMenuState();
+    this->updateEntryDisplay(nullptr);
+}
+
+
+void MainWindow::on_action_CreateTestDB_triggered()
+{
+    if (!this->checkUnsavedChanges())
+        return;
+
+    QString savePath = QFileDialog::getSaveFileName(this, "Create Test Database", "", "Text Files (*.txt)");
+    if (savePath == "")
+        return;
+
+    m_dbController.createTestDB(savePath);
+
+    // import newly created database
+    m_dbController.importDatabaseFile(savePath);
+    this->updateMenuState();
+    this->updateEntryDisplay(m_dbController.getCurrentRecord());
+}
+
+// prompts the user to save if there are unsaved changes, returns false if cancelled
+bool MainWindow::checkUnsavedChanges()
+{
+    if (!m_dbController.isDirty())
+        return true;
+
+    qDebug() << "Unsaved changes";
+    // TODO: implement unsaved changes check
+    QMessageBox::StandardButton response = QMessageBox::question(this, "Unsaved changes?", "There are unsaved changes in this database, would you like to save?",
+                                                                 QMessageBox::Save | QMessageBox::Cancel | QMessageBox::No);
+
+    switch(response)
+    {
+    case QMessageBox::Save:
+        this->on_action_Save_triggered();
+        return true;
+
+    case QMessageBox::Cancel:
+        return false;
+
+    default:
+        return true;
+    }
+}

@@ -18,7 +18,8 @@ public:
     Record* setEntry(uint32_t sid);
     Record* getCurrentRecord();
 
-    bool importDatabaseFile(std::string file);
+    void createTestDB(const QString& path);
+    bool importDatabaseFile(const QString& path);
     bool saveDatabaseFile();
     void closeDatabase();
     bool hasActiveDatabase();
