@@ -10,6 +10,13 @@ The code for the respective tasks as well as their project files can be found in
 
 Built files are output to the `Application/Build/` directory.
 
+### Running with Visual Studio (Tasks 1, 2, and 3)
+
+Open the solution file found in the `Application/` directory.
+
+### Running with Qt (Task 4)
+
+***Important***: When running task 4, make sure you launch using the `CMakeLists.txt` file in the `Application/` directory. Using the CMake file in the task-4 directory will not work.
 
 <!-- Please reads the coursework spec.
 

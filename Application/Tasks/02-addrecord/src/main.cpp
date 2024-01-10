@@ -240,7 +240,7 @@ std::optional<Record> parseRecordInput(CMDUtils::CMDParseResult& parsedArgs, Dat
             // check that grades and enrollments are the same size
             if (argGrades_in->inputs.size() != argEnrollments_in->inputs.size())
             {
-                std::cout << "All module codes must have a corresponding grade" << std::endl;
+                std::cout << "You must provide a module code for each grade and vice versa." << std::endl;
                 return std::nullopt;
             }
 

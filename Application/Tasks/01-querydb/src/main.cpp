@@ -92,7 +92,10 @@ int main(int argc, const char *argv[])
     });
 
     if (parsedArgs.hasUnrequestedArgs())
+    {
         parsedArgs.logUnrequestedArgs(std::cout);
+        return EXIT_FAILURE;
+    }
 
     //Scan command line for -db switch
     CMDTagParserResult* db_in = parsedArgs.getResult(ARG_DB);
@@ -103,8 +106,8 @@ int main(int argc, const char *argv[])
     bool importSuccessful = database.importFromFile(dbName);
     if (!importSuccessful)
     {
-        database.exportToFile(dbName);
-        std::cout << "Provided database could not be loaded, a blank database '" << dbName << "' has been created" << std::endl;
+        std::cout << "Provided database '" << dbName << "' could not be loaded, make sure that it exists and is a valid database file." << std::endl;
+        return EXIT_FAILURE;
     }
 
     //*******************************
@@ -135,15 +138,11 @@ int main(int argc, const char *argv[])
     CMDTagParserResult* sid_in = parsedArgs.getResult(ARG_SID);
     if (sid_in == nullptr)
     {
-        std::cout << "Please provide either a '-showAll' or '-sid <id>' flag" << std::endl;
+        std::cout << "Please provide either a '-showAll' or '-sid <id>' tag" << std::endl;
         return EXIT_FAILURE;
     }
 
-    if (!sid_in->isValid())
-    {
-        std::cout << "Please provide a student ID with '-sid <id>'" << std::endl;
-        return EXIT_FAILURE;
-    }
+    ENSURE_ARG_VALID(sid_in, EXIT_FAILURE)
     
     // attempt to parse the student id
     uint32_t studentId;
@@ -162,7 +161,7 @@ int main(int argc, const char *argv[])
     // check that the student exists
     if (record == nullptr)
     {
-        std::cout << "Provided student Id could not be found in the database" << std::endl;
+        std::cout << "No record with ID: '" << studentId << "' exists within the database" << std::endl;
         return EXIT_FAILURE;
     }
 

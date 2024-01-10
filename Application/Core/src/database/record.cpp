@@ -7,7 +7,7 @@ std::map<RecordField, std::string> Record::s_fieldNames =
 {
 	{ RecordField::SID, "Student Id" },
 	{ RecordField::NAME, "Name" },
-	{ RecordField::ENROLLMENTS, "Enrollments" },
+	{ RecordField::ENROLLMENTS, "Enrolments" },
 	{ RecordField::GRADES, "Grades" },
 	{ RecordField::PHONE, "Phone" }
 };
@@ -18,21 +18,31 @@ std::map<RecordField, std::string> Record::s_fieldNames =
 //	this->grades.push_back(grade);
 //}
 
-void Record::setEnrollmentAndGrade(const std::string& enrollment, float grade)
+int32_t Record::getEnrollmentIndex(const std::string& enrollment)
 {
 	auto itr = std::find(this->enrollments.begin(), this->enrollments.end(), enrollment);
-	
-	// if the enrollment exists within the enrollments list
-	if (itr != this->enrollments.end())
+
+	// return -1 if not present
+	if (itr == this->enrollments.end())
+		return -1;
+
+	return itr - this->enrollments.begin();
+}
+
+void Record::setEnrollmentAndGrade(const std::string& enrollment, float grade)
+{
+	int32_t index = this->getEnrollmentIndex(enrollment);
+	if (index == -1)
 	{
-		uint32_t index = itr - this->enrollments.begin();
+		// if it is not included
+		this->enrollments.push_back(enrollment);
+		this->grades.push_back(grade);
+	}
+	else {
+		// if the enrollment exists within the enrollments list
 		this->grades[index] = grade;
 		return;
 	}
-
-	// if it is not included
-	this->enrollments.push_back(enrollment);
-	this->grades.push_back(grade);
 }
 
 std::string Record::fieldToString(RecordField field)

@@ -144,7 +144,9 @@ int main(int argc, const char *argv[])
     if (!importSuccess)
     {
         database.exportToFile(databaseName);
-        std::cout << "Provided database could not be loaded, a blank database '" << databaseName << "' has been created" << std::endl;
+        std::cout << "Provided database could not be loaded, a blank database '" << databaseName << "' has been created." << std::endl;
+        std::cout << "No further action was taken as this new database is empty" << std::endl;
+        return EXIT_FAILURE;
     }
 
     // get student ID input
@@ -203,12 +205,6 @@ int main(int argc, const char *argv[])
 
 
 
-// macro for testing whether arg is valid, takes a pointer to CMDTagParserResult (provided arg must not be null)
-//#define DEFAULT_ARG_VALID_CHECK(arg) if (!arg->isValid()) \
-//{\
-//    arg->logArgCount(std::cout); \
-//    return false; \
-//}
 
 bool handleChanges(Record& record, CMDParseResult& parsedArgs, std::vector<RecordField>& in_changedFields)
 {
@@ -236,7 +232,7 @@ bool handleChanges(Record& record, CMDParseResult& parsedArgs, std::vector<Recor
     if (argModule_in != nullptr || argGrade_in != nullptr)
     {
         // check that a module code is provided, (if it is not, that means only a grade was provided)
-        ENSURE_REQUIRED_ARG_VALID(argModule_in, "-module", "A corresponding module must be provided for your grade: '-module <module code>", false);
+        ENSURE_REQUIRED_ARG_VALID(argModule_in, "-modulecode", "A corresponding module must be provided for your grade: '-modulecode <module code>", false);
         in_changedFields.push_back(RecordField::ENROLLMENTS);
 
         // set the grade depending on whether one was provided, default is -1 if not provided
@@ -252,7 +248,7 @@ bool handleChanges(Record& record, CMDParseResult& parsedArgs, std::vector<Recor
             });
             if (!gradeParse.has_value())
             {
-                std::cout << "One or more of the grades provided could not be parsed, please make sure they are valid numbers" << std::endl;
+                std::cout << "Provided grade could not be parsed, please make sure it is a valid number" << std::endl;
                 return false;
             }
 
@@ -260,6 +256,14 @@ bool handleChanges(Record& record, CMDParseResult& parsedArgs, std::vector<Recor
             in_changedFields.push_back(RecordField::GRADES);
         }
         else {
+            // grade is required if enrolment already exists
+            if (record.getEnrollmentIndex(argModule_in->getSingletonInput()) != -1)
+            {
+                std::cout << "-grade parameter is required, A grade must be provided when updating an existing module, use: -grade <grade>" << std::endl;
+                return false;
+            }
+
+            // grade is set to -1 (signals undefined) if it is not provided
             grade = -1;
         }
 

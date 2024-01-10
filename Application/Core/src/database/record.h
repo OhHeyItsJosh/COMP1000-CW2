@@ -36,7 +36,7 @@ public:
 	std::vector<float> grades;
 	std::string phone;
 
-
+	int32_t getEnrollmentIndex(const std::string& enrollment);
 	void setEnrollmentAndGrade(const std::string& enrollment, float grade);
 	std::string getFullDisplayString();
 	std::string getDisplayStringForFields(std::vector<RecordField> fields);
