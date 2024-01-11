@@ -143,7 +143,10 @@ int main(int argc, const char *argv[])
     });
 
     if (parserResult.hasUnrequestedArgs())
+    {
         parserResult.logUnrequestedArgs(std::cout);
+        return EXIT_FAILURE;
+    }
 
     // get the database input
     CMDTagParserResult* argDb_in = parserResult.getResult(ARG_DB);
