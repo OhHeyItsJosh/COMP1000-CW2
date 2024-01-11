@@ -91,7 +91,7 @@
         <item>
          <widget class="QLabel" name="lbl_eg">
           <property name="text">
-           <string>Enrollments + Grades:</string>
+           <string>Enrolments + Grades:</string>
           </property>
          </widget>
         </item>
@@ -129,7 +129,7 @@
         </attribute>
         <row>
          <property name="text">
-          <string>Enrollment</string>
+          <string>Enrolment</string>
          </property>
         </row>
         <row>

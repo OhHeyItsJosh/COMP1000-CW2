@@ -22,6 +22,7 @@ bool DataValidation::wordCountCheck(const QString& input, int32_t min, int32_t m
 
 void DataValidation::showInvalidBoundsMessage(QWidget* parent, int32_t min, int32_t max)
 {
+    // show a message that makes sense depending on the bounds
     std::stringstream builder;
     if (max == -1)
         builder << "This field requires at least " << min << " words";

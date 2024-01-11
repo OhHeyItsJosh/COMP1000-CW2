@@ -1,8 +1,5 @@
 #pragma once
 
-#include <iostream>
-#include <fstream>
-
 //Test data as a literal string
 #define TESTSTR "#RECORD\n \
 #SID\n \

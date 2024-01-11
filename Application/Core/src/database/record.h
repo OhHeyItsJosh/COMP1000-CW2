@@ -30,6 +30,8 @@ public:
 	Record() = default;
 
 public:
+    // I know it is good practice to set member variables like this as private and use getters / setters, but I just don't see the point in this case.
+    // Most of this data is constructed externally so I think that using encapsulation wouldn't make much of a difference in this case and would just add more unnecessary code.
 	uint32_t sid;
 	std::string name;
 	std::vector<std::string> enrollments;

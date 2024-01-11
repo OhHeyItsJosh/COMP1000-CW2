@@ -36,6 +36,7 @@ void MainWindow::on_action_Open_Database_triggered()
     if (!this->checkUnsavedChanges())
         return;
 
+    // open dialog to get database path
     QString databasePath = QFileDialog::getOpenFileName(this, "Open Database", "", "Text Files (*.txt)");
     if (databasePath == "")
         return;
@@ -158,6 +159,10 @@ void MainWindow::setEntryControlsEnabled(bool enabled)
 
 void MainWindow::on_actionExit_triggered()
 {
+    // prompt user to save
+    if (!this->checkUnsavedChanges())
+        return;
+
     this->close();
 }
 
@@ -230,6 +235,7 @@ void MainWindow::on_tbl_eg_cellChanged(int row, int column)
         if (!DataValidation::wordCountCheck(newText, 1, 1))
         {
             DataValidation::showInvalidBoundsMessage(this, 1, 1);
+            this->eg_setInactiveUpdate(row, column);
             ui->tbl_eg->item(row, column)->setText(QString::fromStdString(currentRecord->enrollments[column]));
             return;
         }
@@ -245,6 +251,7 @@ void MainWindow::on_tbl_eg_cellChanged(int row, int column)
         if (!ok)
         {
             qDebug() << "Invalid input!";
+            QMessageBox::critical(this, "Invalid input", "Grade input must be a number");
             this->eg_setInactiveUpdate(row, column);
             ui->tbl_eg->item(row, column)->setText(QVariant(currentRecord->grades[column]).toString());
             break;
@@ -364,6 +371,7 @@ void MainWindow::on_egDelete(uint32_t column)
     record.enrollments.erase(record.enrollments.begin() + column);
     record.grades.erase(record.grades.begin() + column);
 
+    m_dbController.setDirty(true);
     this->updateEntryDisplay(&record);
 }
 
@@ -373,7 +381,7 @@ void MainWindow::on_btn_addEG_clicked()
     Record& record = *m_dbController.getCurrentRecord();
 
     // add new enrollment and grade
-    record.enrollments.push_back(std::string("ENROLLMENT_") + std::to_string(record.enrollments.size() + 1));
+    record.enrollments.push_back(std::string("ENROLMENT_") + std::to_string(record.enrollments.size() + 1));
     record.grades.push_back(0);
 
     this->updateEntryDisplay(&record);

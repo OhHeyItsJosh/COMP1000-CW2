@@ -86,7 +86,7 @@ std::string Record::fieldToDisplayString(RecordField field)
 	if (stringForField == "")
 		return NO_VALUE;
 
-	return std::move(stringForField);
+    return stringForField;
 }
 
 std::string Record::getFullDisplayString()

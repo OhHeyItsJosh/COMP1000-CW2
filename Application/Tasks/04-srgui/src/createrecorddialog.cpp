@@ -20,15 +20,17 @@ void CreateRecordDialog::on_controls_accepted()
     QString sid_string = ui->txt_sid->text();
     QString name = ui->txt_name->text();
 
+    // attempt parse of sid
     bool sidParseOk;
     uint32_t sid = sid_string.toUInt(&sidParseOk);
 
     if (!sidParseOk)
     {
-        QMessageBox::critical(this, "Validation Error", "SID needs to be a number");
+        QMessageBox::critical(this, "Validation Error", "SID needs to be an integer");
         return;
     }
 
+    // run accept callback
     QString message;
     bool success = m_onAccept(sid, name, message);
 

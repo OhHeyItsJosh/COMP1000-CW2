@@ -5,32 +5,37 @@
 
 Record* DatabaseController::previousEntry()
 {
+    // decrement index if it can
     if (m_entryIndex > 0)
         m_entryIndex--;
 
-    return m_database.getRecord(m_keyList[m_entryIndex]);
+    return this->getCurrentRecord();
 }
 
 Record* DatabaseController::nextEntry()
 {
+    // increment index if it can
     if (m_entryIndex < m_database.entryCount() - 1)
         m_entryIndex++;
 
-    return m_database.getRecord(m_keyList[m_entryIndex]);
+    return this->getCurrentRecord();
 }
 
 Record* DatabaseController::setEntry(uint32_t sid)
 {
+    // find entry index
     int32_t index = this->indexOfRecord(sid);
     if (index == -1)
         return nullptr;
 
+    // set entry index
     m_entryIndex = index;
     return this->getCurrentRecord();
 }
 
 Record* DatabaseController::getCurrentRecord()
 {
+    // return null if there are no records
     if (m_keyList.size() == 0)
         return nullptr;
 
@@ -46,13 +51,16 @@ bool DatabaseController::importDatabaseFile(const QString& file)
 {
     std::string fileStd = file.toStdString();
 
+    // create seperate database object incase database import is unsuccessful
     Database importedDB;
     bool success = importedDB.importFromFile(fileStd);
 
     if (success)
     {
-        // re-create database info
+        // set current database to imported database.
         m_database = importedDB;
+
+        // set state info
         this->createKeyList();
         m_entryIndex = 0;
         m_databasePath = fileStd;
@@ -68,6 +76,7 @@ bool DatabaseController::saveDatabaseFile()
     return m_database.exportToFile(m_databasePath);
 }
 
+// creates a vector of sid keys from the map so they can be accessed with an index
 void DatabaseController::createKeyList()
 {
     m_keyList = std::vector<uint32_t>(m_database.entryCount());
@@ -82,7 +91,6 @@ void DatabaseController::createKeyList()
 void DatabaseController::closeDatabase()
 {
     m_activeDatabase = false;
-    // maybe do some other stuff in the future such as closing a file stream
 }
 
 bool DatabaseController::hasActiveDatabase()
@@ -95,11 +103,13 @@ void DatabaseController::setDirty(bool dirty)
     m_changesMade = dirty;
 }
 
+// returns whether a change has been made to the database
 bool DatabaseController::isDirty()
 {
-    return m_changesMade;
+    return m_changesMade && m_activeDatabase;
 }
 
+// get the enabled states for the next and back buttons
 void DatabaseController::getSwitcherActiveStates(bool& in_prev, bool& in_next)
 {
     if (m_entryIndex == 0)
@@ -120,15 +130,19 @@ QString DatabaseController::getDatabaseName()
 
 bool DatabaseController::createRecord(uint32_t sid, QString& name)
 {
+    // abort if record exists
     if (m_database.hasRecord(sid))
         return false;
 
+    // create record and set data
     Record record;
     record.sid = sid;
     record.name = name.toStdString();
 
     m_database.addRecord(record);
+    // regen keylist is easier than finding where to insert key
     this->createKeyList();
+    // find the index of the created record and set as active index
     m_entryIndex = this->indexOfRecord(sid);
     return true;
 }
@@ -137,7 +151,9 @@ void DatabaseController::deleteCurrentRecord()
 {
     m_database.removeRecord(m_keyList[m_entryIndex]);
 
+    // remove record from keylist
     m_keyList.erase(m_keyList.begin() + m_entryIndex);
+    // decrement current record index if we can
     m_entryIndex = std::max<int32_t>(m_entryIndex - 1, 0);
 }
 
