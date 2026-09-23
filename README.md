@@ -1,8 +1,23 @@
-# COMP1000 C1 W2
+# COMP1000 C1 W2 - Bespoke database using C++
+
+### Background
+
+I can't remember exactly what the specifications were for this project; the brief file no longer exists. It was something along the line of creating a bespoke text-based database system for storing student records using C++.
+
+For each task (4 in total), we had to create a program to fulfil the requirements. Tasks 1 - 3 are command line programs whereas task 4 is a Qt GUI application. The requirements for tasks 1, 2, and 3 are present as comments in their respective `main.cpp` files.
+
+This project ended up receiving a mark of 99 / 100, apparently the highest in the class.
+
+### Highlights
+
+- The `/Core` module contains common code that is reused across tasks to reduce code duplication.
+- The database is stored as a simple text file that denotes records and fields using hashtags as per the requirements.
+- The code for the database system itself it centralised in the `/Core` module, the task programs provide an interface for interacting with the database.
+- The command line programs use a custom-made system to streamline the process of managing arguments and validating inputs.
 
 ### Project Structure
 
-I have restructured the project and code structure for this project. VS solution can be found in the `Application` directory. 
+I have restructured the project and code structure from the original template. VS solution can be found in the `Application` directory. 
 
 The core database code and some utility classes / functions are stored in the `Application/Core/` directory.
 
